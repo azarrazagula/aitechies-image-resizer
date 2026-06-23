@@ -31,10 +31,6 @@ export default function Header(): JSX.Element {
 
         {/* Extra Action Button - Redirects to BG Remover */}
         <div className="flex items-center gap-4">
-          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-[10px] sm:text-xs font-semibold text-accent-light">
-            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
-            100% Client-Side
-          </span>
           <a
             href="https://aitechiesbgremove.netlify.app/"
             target="_blank"
@@ -57,6 +53,10 @@ export default function Header(): JSX.Element {
               />
             </svg>
           </a>
+          <span className="inline-flex items-center gap-1.5 px-2.5 py-1 sm:px-3 sm:py-1.5 rounded-full bg-neutral-900 border border-neutral-800 text-[10px] sm:text-xs font-semibold text-accent-light">
+            <span className="w-1.5 h-1.5 rounded-full bg-accent animate-pulse" />
+            100% Client-Side
+          </span>
         </div>
       </div>
     </header>
