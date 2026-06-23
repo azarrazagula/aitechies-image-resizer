@@ -1,0 +1,38 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+* {
+  @apply box-border;
+}
+
+html {
+  @apply scroll-smooth h-full;
+}
+
+body {
+  @apply bg-[#0D0D0D] text-[#F8FAFC] font-sans antialiased h-full overflow-x-hidden;
+}
+
+/* Custom UI Component Classes */
+@layer components {
+  /* Gradient text class */
+  .text-brand-gradient {
+    @apply bg-gradient-to-r from-primary via-[#9B85FF] to-accent bg-clip-text text-transparent;
+  }
+
+  /* Premium border with subtle outline glow */
+  .brand-border {
+    @apply border border-darkbg-border focus-within:border-primary/50 transition-colors duration-300;
+  }
+
+  /* Glass card design with physical edge refraction and inner border */
+  .glass-card {
+    @apply bg-[#161616]/90 backdrop-blur-md border border-white/5 rounded-2xl shadow-xl shadow-black/40;
+    box-shadow: inset 0 1px 0 rgba(255, 255, 255, 0.05), 0 20px 40px -15px rgba(0, 0, 0, 0.5);
+  }
+
+  .interactive-hover {
+    @apply hover:border-primary/40 hover:bg-[#1f1f1f] transition-all duration-300;
+  }
+}
