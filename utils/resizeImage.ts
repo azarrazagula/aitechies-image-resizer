@@ -5,7 +5,8 @@ export function resizeImage(
   mode: "fit" | "fill" | "stretch",
   bgColor = "#ffffff",
   format = "image/png",
-  quality = 0.9
+  quality = 0.9,
+  cropOffset = { x: 0, y: 0 }
 ): Promise<Blob> {
   return new Promise((resolve, reject) => {
     const img = new Image();
@@ -28,8 +29,8 @@ export function resizeImage(
         ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
       } else if (mode === "fill") {
         const scale = Math.max(targetW / img.width, targetH / img.height);
-        const x = (targetW - img.width * scale) / 2;
-        const y = (targetH - img.height * scale) / 2;
+        const x = (targetW - img.width * scale) / 2 + cropOffset.x;
+        const y = (targetH - img.height * scale) / 2 + cropOffset.y;
         ctx.drawImage(img, x, y, img.width * scale, img.height * scale);
       } else {
         ctx.drawImage(img, 0, 0, targetW, targetH);

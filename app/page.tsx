@@ -23,18 +23,29 @@ export default function Home(): JSX.Element {
   const [mode, setMode] = useState<"fit" | "fill" | "stretch">("fit");
   const [bgColor, setBgColor] = useState<string>("#ffffff");
   const [activeFileIndex, setActiveFileIndex] = useState<number>(0);
+  const [cropOffsets, setCropOffsets] = useState<Record<number, { x: number; y: number }>>({});
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
   const activeFile = files[activeFileIndex] || null;
+  const activeCropOffset = cropOffsets[activeFileIndex] || { x: 0, y: 0 };
 
   const handleFilesSelect = (selectedFiles: File[]) => {
     setFiles(selectedFiles);
     setActiveFileIndex(0);
+    setCropOffsets({});
   };
 
   const handlePresetSelect = (preset: Preset, category: string) => {
     setSelectedPreset(preset);
     setSelectedCategory(category);
+    setCropOffsets({}); // Reset crop offsets when aspect ratio changes
+  };
+
+  const handleCropOffsetChange = (offset: { x: number; y: number }) => {
+    setCropOffsets((prev) => ({
+      ...prev,
+      [activeFileIndex]: offset,
+    }));
   };
 
   const handleReset = () => {
@@ -42,6 +53,7 @@ export default function Home(): JSX.Element {
     setActiveFileIndex(0);
     setMode("fit");
     setBgColor("#ffffff");
+    setCropOffsets({});
   };
 
   const getCleanFilename = (originalName: string, ext: string): string => {
@@ -76,7 +88,8 @@ export default function Home(): JSX.Element {
           mode,
           bgColor,
           format,
-          quality
+          quality,
+          activeCropOffset
         );
         const filename = getCleanFilename(activeFile.name, ext);
         triggerDownload(blob, filename);
@@ -84,6 +97,7 @@ export default function Home(): JSX.Element {
         // Multi-file download sequentially
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
+          const offset = cropOffsets[i] || { x: 0, y: 0 };
           const blob = await resizeImage(
             file,
             targetW,
@@ -91,7 +105,8 @@ export default function Home(): JSX.Element {
             mode,
             bgColor,
             format,
-            quality
+            quality,
+            offset
           );
           const filename = getCleanFilename(file.name, ext);
           triggerDownload(blob, filename);
@@ -101,6 +116,7 @@ export default function Home(): JSX.Element {
         const items: { blob: Blob; filename: string }[] = [];
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
+          const offset = cropOffsets[i] || { x: 0, y: 0 };
           const blob = await resizeImage(
             file,
             targetW,
@@ -108,7 +124,8 @@ export default function Home(): JSX.Element {
             mode,
             bgColor,
             format,
-            quality
+            quality,
+            offset
           );
           const filename = getCleanFilename(file.name, ext);
           items.push({ blob, filename });
@@ -222,6 +239,8 @@ export default function Home(): JSX.Element {
                     targetH={selectedPreset.h}
                     mode={mode}
                     bgColor={bgColor}
+                    cropOffset={activeCropOffset}
+                    onCropOffsetChange={handleCropOffsetChange}
                   />
                 </div>
               )}
