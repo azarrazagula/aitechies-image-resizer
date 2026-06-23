@@ -2,7 +2,6 @@
 
 import React, { useState, useEffect } from "react";
 import { PLATFORMS, Preset } from "../utils/presets";
-import { PLATFORMS_METADATA } from "../constants/platforms";
 
 interface PlatformPickerProps {
   onPresetSelect: (preset: Preset, category: string) => void;
@@ -36,10 +35,10 @@ export default function PlatformPicker({
         <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-400 mb-3">
           1. Choose Platform
         </h3>
-        <div className="grid grid-cols-2 sm:grid-cols-4 md:grid-cols-7 gap-3">
+        <div className="grid grid-cols-3 gap-2 sm:flex sm:flex-wrap sm:gap-3">
           {PLATFORMS.map((platform) => {
-            const meta = PLATFORMS_METADATA[platform.category];
             const isSelected = selectedCategory === platform.category;
+            const isCustom = platform.category === "Custom";
 
             return (
               <button
@@ -54,25 +53,15 @@ export default function PlatformPicker({
                     onPresetSelect(platform.presets[0], platform.category);
                   }
                 }}
-                className={`flex flex-col items-center justify-center p-3.5 rounded-2xl border text-center transition-all duration-300 ${
+                className={`py-2 px-3 sm:px-4 sm:py-2.5 rounded-xl border text-center transition-all duration-300 text-xs font-semibold ${
+                  isCustom ? "col-span-3 sm:col-span-auto sm:flex-shrink-0" : "flex-shrink-0"
+                } ${
                   isSelected
-                    ? "border-primary bg-primary/10 shadow-lg shadow-primary/5 text-white"
+                    ? "border-primary bg-primary/10 text-white shadow-md"
                     : "border-neutral-800 bg-[#161616]/40 hover:border-neutral-700 hover:bg-[#161616]/80 text-neutral-400 hover:text-neutral-200"
                 }`}
               >
-                {/* Visual Icon indicator */}
-                <div
-                  className={`w-9 h-9 rounded-xl flex items-center justify-center text-white mb-2 shadow-sm ${
-                    meta?.iconBg || "bg-neutral-800"
-                  }`}
-                >
-                  <span className="font-bold text-sm">
-                    {platform.category.charAt(0)}
-                  </span>
-                </div>
-                <span className="text-xs font-semibold tracking-wide">
-                  {platform.category}
-                </span>
+                {platform.category}
               </button>
             );
           })}
@@ -130,7 +119,7 @@ export default function PlatformPicker({
           </div>
         ) : (
           /* Preset lists */
-          <div className="grid grid-cols-1 sm:grid-cols-3 gap-3">
+          <div className="grid grid-cols-2 sm:grid-cols-3 gap-2.5">
             {activePlatform.presets.map((preset) => {
               const isSelected =
                 selectedPreset?.name === preset.name &&
@@ -141,22 +130,22 @@ export default function PlatformPicker({
                   key={preset.name}
                   type="button"
                   onClick={() => onPresetSelect(preset, activePlatform.category)}
-                  className={`flex items-center justify-between p-4 rounded-2xl border text-left transition-all duration-300 ${
+                  className={`flex flex-col sm:flex-row sm:items-center justify-between p-3.5 sm:p-4 rounded-2xl border text-left transition-all duration-300 ${
                     isSelected
                       ? "border-primary bg-primary/10 shadow-md text-white"
                       : "border-neutral-800 bg-[#161616]/40 hover:border-neutral-700 hover:bg-[#161616]/80 text-neutral-400 hover:text-neutral-200"
                   }`}
                 >
                   <div className="space-y-1">
-                    <span className="text-xs text-neutral-500 block">
+                    <span className="text-[10px] text-neutral-500 block">
                       {selectedCategory}
                     </span>
-                    <span className="text-sm font-semibold text-white">
+                    <span className="text-xs sm:text-sm font-semibold text-white block truncate max-w-[120px] sm:max-w-none">
                       {preset.name}
                     </span>
                   </div>
-                  <div className="text-right">
-                    <span className="text-xs font-mono px-2 py-1 rounded bg-neutral-900 border border-neutral-800 font-semibold text-accent-light block">
+                  <div className="mt-2 sm:mt-0 sm:text-right">
+                    <span className="text-[9px] sm:text-xs font-mono px-1.5 py-0.5 sm:px-2 sm:py-1 rounded bg-neutral-900 border border-neutral-800 font-semibold text-accent-light inline-block">
                       {preset.w} × {preset.h}
                     </span>
                   </div>

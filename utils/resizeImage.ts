@@ -21,8 +21,15 @@ export function resizeImage(
       }
 
       if (mode === "fit") {
-        ctx.fillStyle = bgColor;
-        ctx.fillRect(0, 0, targetW, targetH);
+        if (bgColor !== "transparent") {
+          ctx.fillStyle = bgColor;
+          ctx.fillRect(0, 0, targetW, targetH);
+        } else if (format === "image/jpeg") {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, targetW, targetH);
+        } else {
+          ctx.clearRect(0, 0, targetW, targetH);
+        }
         const scale = Math.min(targetW / img.width, targetH / img.height);
         const x = (targetW - img.width * scale) / 2;
         const y = (targetH - img.height * scale) / 2;

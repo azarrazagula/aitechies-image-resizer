@@ -142,7 +142,7 @@ export default function Home(): JSX.Element {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col relative bg-[#0D0D0D]">
+    <div className="min-h-[100dvh] flex flex-col relative bg-[#0D0D0D] overflow-x-hidden">
       {/* Background glow effects */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px] pointer-events-none z-0" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-accent/10 blur-[120px] pointer-events-none z-0" />
@@ -151,7 +151,11 @@ export default function Home(): JSX.Element {
       <Header />
 
       {/* Main Container */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 w-full flex-1 flex flex-col relative z-10">
+      <main className={`w-full flex-1 flex flex-col relative z-10 ${
+        files.length > 0 
+          ? "lg:max-w-6xl lg:mx-auto lg:px-8 lg:py-12" 
+          : "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12"
+      }`}>
         {files.length === 0 ? (
           /* Landing page when no files uploaded */
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center w-full py-8 md:py-16">
@@ -183,11 +187,85 @@ export default function Home(): JSX.Element {
           </div>
         ) : (
           /* Editor Dashboard */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 items-start w-full py-4">
-            {/* Left Column: Settings and Controls */}
-            <div className="lg:col-span-7 space-y-6">
-              {/* Reset/Upload New button */}
-              <div className="flex items-center justify-between">
+          <div className="flex flex-col lg:grid lg:grid-cols-12 gap-0 lg:gap-8 items-stretch lg:items-start w-full py-0 lg:py-4">
+            {/* Top Preview Column (Right Column on desktop) */}
+            <div className="sticky top-16 lg:sticky lg:top-24 order-1 lg:order-2 lg:col-span-5 flex flex-col bg-[#0D0D0D] border-b lg:border-none border-neutral-900 p-4 lg:p-0 flex-shrink-0 z-30 shadow-md lg:shadow-none">
+              {/* Mobile/Tablet Upload New Button (Above Preview) */}
+              <div className="flex items-center justify-between mb-3 lg:hidden px-1">
+                <button
+                  type="button"
+                  onClick={handleReset}
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all text-xs font-semibold border border-neutral-800"
+                >
+                  ← Upload New Images
+                </button>
+                {files.length > 1 && (
+                  <span className="text-xs font-medium text-neutral-400 bg-neutral-900 border border-neutral-800 px-3 py-1 rounded-xl">
+                    Batch: {files.length} loaded
+                  </span>
+                )}
+              </div>
+
+              {/* Canvas Live Preview */}
+              {activeFile && selectedPreset && (
+                <div className="lg:glass-card lg:p-6 lg:border-neutral-800 space-y-3 lg:space-y-4">
+                  <h3 className="hidden lg:block text-sm font-semibold uppercase tracking-wider text-neutral-400 text-center">
+                    Live Preview
+                  </h3>
+                  <CanvasPreview
+                    file={activeFile}
+                    targetW={selectedPreset.w}
+                    targetH={selectedPreset.h}
+                    mode={mode}
+                    bgColor={bgColor}
+                    cropOffset={activeCropOffset}
+                    onCropOffsetChange={handleCropOffsetChange}
+                  />
+                </div>
+              )}
+
+              {/* Batch image thumbnails navigation */}
+              {files.length > 1 && (
+                <div className="lg:glass-card lg:p-4 lg:border-neutral-800 p-2 border-t lg:border-t-0 border-neutral-900 mt-2">
+                  <span className="hidden lg:block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">
+                    Select Preview Image
+                  </span>
+                  <div className="flex gap-2.5 overflow-x-auto pb-1.5 scrollbar-thin">
+                    {files.map((file, idx) => {
+                      const isActive = idx === activeFileIndex;
+                      const thumbUrl = URL.createObjectURL(file);
+
+                      return (
+                        <button
+                          key={file.name + idx}
+                          type="button"
+                          onClick={() => {
+                            setActiveFileIndex(idx);
+                          }}
+                          className={`w-12 h-12 lg:w-14 lg:h-14 rounded-xl border flex-shrink-0 overflow-hidden relative transition-all duration-300 ${
+                            isActive
+                              ? "border-primary ring-2 ring-primary/40 scale-105"
+                              : "border-neutral-800 hover:border-neutral-600 hover:scale-102"
+                          }`}
+                        >
+                          <img
+                            src={thumbUrl}
+                            alt={file.name}
+                            className="w-full h-full object-cover"
+                            onLoad={() => URL.revokeObjectURL(thumbUrl)}
+                          />
+                        </button>
+                      );
+                    })}
+                  </div>
+                </div>
+              )}
+            </div>
+
+            {/* Bottom Controls Column (Left Column on desktop) */}
+            <div className="order-2 lg:order-1 lg:col-span-7 flex-1 p-4 sm:p-6 lg:p-0 space-y-6 bg-[#090909] lg:bg-transparent">
+              {/* Reset/Upload New button (Desktop Only) */}
+              <div className="hidden lg:flex items-center justify-between">
                 <button
                   type="button"
                   onClick={handleReset}
@@ -223,71 +301,20 @@ export default function Home(): JSX.Element {
                 isBatch={files.length > 1}
                 isLoading={isProcessing}
               />
-            </div>
 
-            {/* Right Column: Live Preview & Batch Navigation */}
-            <div className="lg:col-span-5 space-y-6">
-              {/* Canvas Live Preview */}
-              {activeFile && selectedPreset && (
-                <div className="glass-card p-6 border-neutral-800 space-y-4">
-                  <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-400 text-center">
-                    Live Preview
-                  </h3>
-                  <CanvasPreview
-                    file={activeFile}
-                    targetW={selectedPreset.w}
-                    targetH={selectedPreset.h}
-                    mode={mode}
-                    bgColor={bgColor}
-                    cropOffset={activeCropOffset}
-                    onCropOffsetChange={handleCropOffsetChange}
-                  />
-                </div>
-              )}
-
-              {/* Batch image thumbnails navigation */}
-              {files.length > 1 && (
-                <div className="glass-card p-4 border-neutral-800 space-y-3">
-                  <span className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-                    Select Preview Image
-                  </span>
-                  <div className="flex gap-2.5 overflow-x-auto pb-1.5 scrollbar-thin">
-                    {files.map((file, idx) => {
-                      const isActive = idx === activeFileIndex;
-                      const thumbUrl = URL.createObjectURL(file);
-
-                      return (
-                        <button
-                          key={file.name + idx}
-                          type="button"
-                          onClick={() => {
-                            setActiveFileIndex(idx);
-                          }}
-                          className={`w-14 h-14 rounded-xl border flex-shrink-0 overflow-hidden relative transition-all duration-300 ${
-                            isActive
-                              ? "border-primary ring-2 ring-primary/40 scale-105"
-                              : "border-neutral-800 hover:border-neutral-600 hover:scale-102"
-                          }`}
-                        >
-                          <img
-                            src={thumbUrl}
-                            alt={file.name}
-                            className="w-full h-full object-cover"
-                            onLoad={() => URL.revokeObjectURL(thumbUrl)}
-                          />
-                        </button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
+              {/* Mobile Footer (shown inside scroll container) */}
+              <div className="block lg:hidden pt-8 border-t border-neutral-900">
+                <Footer />
+              </div>
             </div>
           </div>
         )}
       </main>
 
-      {/* Footer copyright and attribution */}
-      <Footer />
+      {/* Desktop Footer (shown at page bottom) */}
+      <div className="hidden lg:block">
+        <Footer />
+      </div>
     </div>
   );
 }

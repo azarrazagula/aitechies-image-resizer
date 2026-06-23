@@ -146,28 +146,18 @@ export default function CanvasPreview({
     <div className="flex flex-col items-center gap-3 w-full">
       {/* Outer Preview Wrapper */}
       <div 
-        className="w-full relative flex items-center justify-center p-6 border border-neutral-800 bg-[#121212] rounded-3xl overflow-hidden min-h-[300px] max-h-[500px]"
+        className="relative inline-flex items-center justify-center border border-neutral-800/80 bg-[#121212] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl mx-auto max-w-full max-h-[160px] min-[375px]:max-h-[200px] min-[410px]:max-h-[240px] sm:max-h-[280px] lg:max-h-[400px]"
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => {
           setIsHovered(false);
           handleEnd();
         }}
       >
-        {/* Checkerboard Background for Transparency */}
-        <div
-          className="absolute inset-0 opacity-5 pointer-events-none"
-          style={{
-            backgroundImage: "linear-gradient(45deg, #fff 25%, transparent 25%), linear-gradient(-45deg, #fff 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #fff 75%), linear-gradient(-45deg, transparent 75%, #fff 75%)",
-            backgroundSize: "20px 20px",
-            backgroundPosition: "0 0, 0 10px, 10px -10px, -10px 0",
-          }}
-        />
-
         {/* Drag Hint Overlay */}
         {mode === "fill" && isHovered && !activeDrag && (
           <div className="absolute top-4 z-20 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-neutral-800 text-[10px] font-semibold text-neutral-300 pointer-events-none select-none flex items-center gap-1.5 animate-fade-in">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-              <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 013 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1" />
+               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 013 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1" />
             </svg>
             Drag image to adjust crop
           </div>
@@ -190,20 +180,26 @@ export default function CanvasPreview({
             }
           }}
           onTouchEnd={handleEnd}
-          className={`relative z-10 max-w-full max-h-[400px] object-contain rounded-lg shadow-2xl border border-neutral-800/40 select-none ${getCursorClass()}`}
+          className={`max-w-full max-h-[160px] min-[375px]:max-h-[200px] min-[410px]:max-h-[240px] sm:max-h-[280px] lg:max-h-[400px] w-auto h-auto select-none ${getCursorClass()}`}
           style={{
             aspectRatio: `${targetW} / ${targetH}`,
             touchAction: mode === "fill" ? "none" : "auto", // Prevent page scroll during drag on mobile
+            backgroundColor: bgColor === "transparent" ? "#18181B" : bgColor,
+            backgroundImage: bgColor === "transparent" 
+              ? "linear-gradient(45deg, #27272A 25%, transparent 25%), linear-gradient(-45deg, #27272A 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #27272A 75%), linear-gradient(-45deg, transparent 75%, #27272A 75%)" 
+              : undefined,
+            backgroundSize: bgColor === "transparent" ? "16px 16px" : undefined,
+            backgroundPosition: bgColor === "transparent" ? "0 0, 0 8px, 8px -8px, -8px 0" : undefined,
           }}
         />
       </div>
 
       {/* Output size display indicator */}
-      <div className="text-center space-y-1">
-        <span className="text-xs text-neutral-400 font-semibold uppercase tracking-wider block">
-          Output Dimensions
+      <div className="flex items-center justify-center gap-2 sm:flex-col sm:gap-1 text-center">
+        <span className="text-[10px] sm:text-xs text-neutral-400 font-semibold uppercase tracking-wider">
+          Output Dimensions:
         </span>
-        <span className="font-mono text-lg font-bold text-[#00C2A8]">
+        <span className="font-mono text-sm sm:text-lg font-bold text-[#00C2A8]">
           {targetW} px × {targetH} px
         </span>
       </div>
