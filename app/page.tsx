@@ -125,7 +125,7 @@ export default function Home(): JSX.Element {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col relative overflow-hidden bg-[#0D0D0D]">
+    <div className="min-h-[100dvh] flex flex-col relative bg-[#0D0D0D]">
       {/* Background glow effects */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px] pointer-events-none z-0" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-accent/10 blur-[120px] pointer-events-none z-0" />
@@ -134,7 +134,7 @@ export default function Home(): JSX.Element {
       <Header />
 
       {/* Main Container */}
-      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 w-full flex-1 flex flex-col relative z-10 justify-center">
+      <main className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12 w-full flex-1 flex flex-col relative z-10">
         {files.length === 0 ? (
           /* Landing page when no files uploaded */
           <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center w-full py-8 md:py-16">
