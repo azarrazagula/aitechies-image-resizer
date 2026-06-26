@@ -1,6 +1,8 @@
 "use client";
 
 import React, { useRef, useEffect, useState } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { Preset } from "../utils/presets";
 
 interface CanvasPreviewProps {
   file: File;
@@ -10,6 +12,11 @@ interface CanvasPreviewProps {
   bgColor: string;
   cropOffset: { x: number; y: number };
   onCropOffsetChange: (offset: { x: number; y: number }) => void;
+  selectedCategory: string;
+  onPresetSelect: (preset: Preset, category: string) => void;
+  resizedSize: number | null;
+  format: "image/png" | "image/jpeg" | "image/webp";
+  isCalculatingSize?: boolean;
 }
 
 export default function CanvasPreview({
@@ -20,6 +27,11 @@ export default function CanvasPreview({
   bgColor,
   cropOffset,
   onCropOffsetChange,
+  selectedCategory,
+  onPresetSelect,
+  resizedSize,
+  format,
+  isCalculatingSize = false,
 }: CanvasPreviewProps): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const isDragging = useRef<boolean>(false);
@@ -33,6 +45,57 @@ export default function CanvasPreview({
   const [imageMeta, setImageMeta] = useState<{ width: number; height: number } | null>(null);
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [activeDrag, setActiveDrag] = useState<boolean>(false);
+  const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
+
+  // Smoothly animate the resized size changes (number counter)
+  const [animatedSize, setAnimatedSize] = useState<number | null>(null);
+  useEffect(() => {
+    if (resizedSize === null) {
+      setAnimatedSize(null);
+      return;
+    }
+    if (animatedSize === null) {
+      setAnimatedSize(resizedSize);
+      return;
+    }
+
+    const start = animatedSize;
+    const end = resizedSize;
+    const duration = 750; // Increased to 750ms for a smoother, premium feel
+    const startTime = performance.now();
+
+    let animationFrameId: number;
+
+    const animate = (currentTime: number) => {
+      const elapsed = currentTime - startTime;
+      const progress = Math.min(elapsed / duration, 1);
+      
+      // Ease out cubic: starts fast, decelerates to a gentle stop
+      const easeProgress = 1 - Math.pow(1 - progress, 3);
+      const currentVal = Math.round(start + (end - start) * easeProgress);
+      
+      setAnimatedSize(currentVal);
+
+      if (progress < 1) {
+        animationFrameId = requestAnimationFrame(animate);
+      }
+    };
+
+    animationFrameId = requestAnimationFrame(animate);
+
+    return () => {
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [resizedSize]);
+
+  // Trigger smooth transition animation when target dimensions or file changes
+  useEffect(() => {
+    setIsTransitioning(true);
+    const timer = setTimeout(() => {
+      setIsTransitioning(false);
+    }, 400); // matches the duration of the CSS transition
+    return () => clearTimeout(timer);
+  }, [targetW, targetH, mode, file]);
 
   // Load image and set metadata
   useEffect(() => {
@@ -58,6 +121,11 @@ export default function CanvasPreview({
     const ctx = canvas.getContext("2d");
     if (!ctx) return;
 
+    // Guard: Do not attempt to draw if dimensions are invalid
+    if (!targetW || !targetH || isNaN(targetW) || isNaN(targetH) || targetW <= 0 || targetH <= 0) {
+      return;
+    }
+
     const img = new Image();
     let objectUrl = URL.createObjectURL(file);
 
@@ -70,6 +138,11 @@ export default function CanvasPreview({
         if (bgColor !== "transparent") {
           ctx.fillStyle = bgColor;
           ctx.fillRect(0, 0, targetW, targetH);
+        } else if (format === "image/jpeg") {
+          ctx.fillStyle = "#ffffff";
+          ctx.fillRect(0, 0, targetW, targetH);
+        } else {
+          ctx.clearRect(0, 0, targetW, targetH);
         }
         const scale = Math.min(targetW / img.width, targetH / img.height);
         const x = (targetW - img.width * scale) / 2;
@@ -91,7 +164,7 @@ export default function CanvasPreview({
     return () => {
       URL.revokeObjectURL(objectUrl);
     };
-  }, [file, targetW, targetH, mode, bgColor, cropOffset]);
+  }, [file, targetW, targetH, mode, bgColor, cropOffset, format]);
 
   // Drag handlers
   const handleStart = (clientX: number, clientY: number) => {
@@ -145,8 +218,14 @@ export default function CanvasPreview({
   return (
     <div className="flex flex-col items-center gap-3 w-full">
       {/* Outer Preview Wrapper */}
-      <div 
-        className="relative inline-flex items-center justify-center border border-neutral-800/80 bg-[#121212] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl mx-auto max-w-full max-h-[160px] min-[375px]:max-h-[200px] min-[410px]:max-h-[240px] sm:max-h-[280px] lg:max-h-[400px]"
+      <motion.div 
+        layout
+        transition={{ type: "spring", stiffness: 180, damping: 24 }}
+        className={`relative inline-flex items-center justify-center border bg-[#121212] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl mx-auto max-w-full max-h-[220px] min-[375px]:max-h-[260px] min-[410px]:max-h-[300px] sm:max-h-[380px] md:max-h-[480px] lg:max-h-[560px] xl:max-h-[640px] ${
+          isTransitioning 
+            ? "border-primary/60 shadow-primary/20 ring-4 ring-primary/20 scale-[0.98]" 
+            : "border-neutral-800/80 shadow-black/40"
+        }`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => {
           setIsHovered(false);
@@ -180,7 +259,9 @@ export default function CanvasPreview({
             }
           }}
           onTouchEnd={handleEnd}
-          className={`max-w-full max-h-[160px] min-[375px]:max-h-[200px] min-[410px]:max-h-[240px] sm:max-h-[280px] lg:max-h-[400px] w-auto h-auto select-none ${getCursorClass()}`}
+          className={`max-w-full max-h-[220px] min-[375px]:max-h-[260px] min-[410px]:max-h-[300px] sm:max-h-[380px] md:max-h-[480px] lg:max-h-[560px] xl:max-h-[640px] w-auto h-auto select-none transition-all duration-300 ease-in-out ${
+            isTransitioning ? "opacity-75 blur-[2px] scale-[0.98]" : "opacity-100 blur-0 scale-100"
+          } ${getCursorClass()}`}
           style={{
             aspectRatio: `${targetW} / ${targetH}`,
             touchAction: mode === "fill" ? "none" : "auto", // Prevent page scroll during drag on mobile
@@ -190,19 +271,102 @@ export default function CanvasPreview({
               : undefined,
             backgroundSize: bgColor === "transparent" ? "16px 16px" : undefined,
             backgroundPosition: bgColor === "transparent" ? "0 0, 0 8px, 8px -8px, -8px 0" : undefined,
+            transitionProperty: "aspect-ratio, transform, opacity, filter",
           }}
         />
-      </div>
-
+      </motion.div>
       {/* Output size display indicator */}
-      <div className="flex items-center justify-center gap-2 sm:flex-col sm:gap-1 text-center">
+      <div className="flex flex-col items-center gap-2.5 text-center mt-2 w-full">
         <span className="text-[10px] sm:text-xs text-neutral-400 font-semibold uppercase tracking-wider">
           Output Dimensions:
         </span>
-        <span className="font-mono text-sm sm:text-lg font-bold text-[#00C2A8]">
-          {targetW} px × {targetH} px
-        </span>
+        <div className="flex items-center justify-center gap-2.5 font-mono text-sm sm:text-base font-bold">
+          <span className={`flex items-center gap-1 bg-[#161616]/85 px-3 py-1.5 rounded-xl border transition-all duration-300 ${
+            isTransitioning ? "scale-105 text-primary-light border-primary/30" : "text-accent border-neutral-850"
+          }`}>
+            <span className="text-neutral-500 font-sans text-[10px] font-semibold mr-0.5">↔ Width:</span>
+            <span>{targetW} px</span>
+          </span>
+          <span className="text-neutral-600">×</span>
+          <span className={`flex items-center gap-1 bg-[#161616]/85 px-3 py-1.5 rounded-xl border transition-all duration-300 ${
+            isTransitioning ? "scale-105 text-primary-light border-primary/30" : "text-accent border-neutral-850"
+          }`}>
+            <span className="text-neutral-500 font-sans text-[10px] font-semibold mr-0.5">↕ Height:</span>
+            <span>{targetH} px</span>
+          </span>
+        </div>
+        
+        {selectedCategory !== "Custom" ? (
+          <button
+            type="button"
+            onClick={() => onPresetSelect({ name: "User-defined", w: targetW, h: targetH }, "Custom")}
+            className="text-[10px] text-neutral-500 hover:text-primary-light transition-colors underline font-semibold mt-0.5 flex items-center gap-1"
+          >
+            Click here to customize size
+          </button>
+        ) : (
+          <span className="text-[10px] text-neutral-500 font-semibold mt-0.5">
+            Custom Size Mode (Edit in settings on left)
+          </span>
+        )}
+      </div>
+
+      {/* File Size Comparison Card */}
+      <div className="flex items-center justify-between w-full max-w-sm px-5 py-3.5 bg-[#161616]/60 border border-white/5 rounded-2xl mt-2.5 shadow-inner select-none">
+        <div className="flex flex-col items-start gap-0.5">
+          <span className="text-[9px] text-neutral-400 font-semibold uppercase tracking-wider">Original Size</span>
+          <span className="font-mono text-xs sm:text-sm text-neutral-300 font-semibold">{formatFileSize(file.size)}</span>
+        </div>
+        
+        {/* Animated Arrow/Spinner Indicator - Prevents layout shifts */}
+        <div className="w-10 h-6 flex items-center justify-center relative">
+          <AnimatePresence mode="wait">
+            {isCalculatingSize ? (
+              <motion.span
+                key="spinner"
+                initial={{ opacity: 0, scale: 0.6, rotate: -90 }}
+                animate={{ opacity: 1, scale: 1, rotate: 0 }}
+                exit={{ opacity: 0, scale: 0.6, rotate: 90 }}
+                transition={{ duration: 0.2, ease: "easeInOut" }}
+                className="w-4 h-4 border-2 border-[#00C2A8] border-t-transparent rounded-full animate-spin block"
+              />
+            ) : (
+              <motion.span
+                key="arrow"
+                initial={{ opacity: 0, scale: 0.6 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.6 }}
+                transition={{ duration: 0.2 }}
+                className="text-neutral-600 font-bold text-base block"
+              >
+                →
+              </motion.span>
+            )}
+          </AnimatePresence>
+        </div>
+
+        <div className="flex flex-col items-end gap-0.5">
+          <span className="text-[9px] text-neutral-450 font-semibold uppercase tracking-wider">Resized Size</span>
+          <span className="font-mono text-xs sm:text-sm text-[#00C2A8] font-bold">
+            <span 
+              className={`transition-all duration-300 ease-in-out inline-block ${
+                isCalculatingSize ? "opacity-50 scale-95 blur-[0.5px]" : "opacity-100 scale-100 blur-0"
+              }`}
+            >
+              {animatedSize !== null ? formatFileSize(animatedSize) : "—"}
+            </span>
+          </span>
+        </div>
       </div>
     </div>
   );
+}
+
+// Helper to format bytes into readable KB/MB
+function formatFileSize(bytes: number): string {
+  if (bytes === 0) return "0 B";
+  const k = 1024;
+  const sizes = ["B", "KB", "MB"];
+  const i = Math.floor(Math.log(bytes) / Math.log(k));
+  return parseFloat((bytes / Math.pow(k, i)).toFixed(1)) + " " + sizes[i];
 }

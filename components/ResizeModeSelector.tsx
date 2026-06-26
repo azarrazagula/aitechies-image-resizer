@@ -1,6 +1,7 @@
 "use client";
 
 import React from "react";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface ResizeModeSelectorProps {
   mode: "fit" | "fill" | "stretch";
@@ -39,11 +40,13 @@ export default function ResizeModeSelector({
             if (m === "stretch") description = "Stretch to fit";
 
             return (
-              <button
+              <motion.button
                 key={m}
                 type="button"
+                whileHover={{ scale: 1.03 }}
+                whileTap={{ scale: 0.97 }}
                 onClick={() => onModeSelect(m)}
-                className={`flex flex-col items-center p-4 rounded-2xl border text-center transition-all duration-300 ${
+                className={`flex flex-col items-center p-4 rounded-2xl border text-center transition-colors duration-300 ${
                   isSelected
                     ? "border-primary bg-primary/10 text-white shadow-md"
                     : "border-neutral-800 bg-[#161616]/40 hover:border-neutral-700 text-neutral-400 hover:text-neutral-200"
@@ -51,66 +54,76 @@ export default function ResizeModeSelector({
               >
                 <span className="text-sm font-bold capitalize mb-1">{m}</span>
                 <span className="text-[10px] opacity-75">{description}</span>
-              </button>
+              </motion.button>
             );
           })}
         </div>
       </div>
 
-      {mode === "fit" && (
-        <div className="p-4 bg-[#161616]/40 border border-neutral-800 rounded-2xl animate-fade-in space-y-3">
-          <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider">
-            Background Color
-          </label>
-          <div className="flex flex-wrap items-center gap-3">
-            {PRESET_COLORS.map((color) => {
-              const isSelected = bgColor === color.value;
-              const isTransparent = color.value === "transparent";
+      <AnimatePresence>
+        {mode === "fit" && (
+          <motion.div
+            initial={{ opacity: 0, height: 0, scale: 0.98 }}
+            animate={{ opacity: 1, height: "auto", scale: 1 }}
+            exit={{ opacity: 0, height: 0, scale: 0.98 }}
+            transition={{ duration: 0.25, ease: "easeInOut" }}
+            className="p-4 bg-[#161616]/40 border border-neutral-800 rounded-2xl overflow-hidden space-y-3"
+          >
+            <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+              Background Color
+            </label>
+            <div className="flex flex-wrap items-center gap-3">
+              {PRESET_COLORS.map((color) => {
+                const isSelected = bgColor === color.value;
+                const isTransparent = color.value === "transparent";
 
-              return (
-                <button
-                  key={color.name}
-                  type="button"
-                  onClick={() => onBgColorChange(color.value)}
-                  className={`w-8 h-8 rounded-full border transition-transform duration-200 relative ${
-                    isSelected
-                      ? "scale-110 border-white ring-2 ring-primary/45"
-                      : "border-neutral-700 hover:scale-105"
-                  }`}
-                  style={{
-                    backgroundColor: isTransparent ? undefined : color.value,
-                    backgroundImage: isTransparent
-                      ? "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)"
-                      : undefined,
-                    backgroundSize: isTransparent ? "8px 8px" : undefined,
-                    backgroundPosition: isTransparent ? "0 0, 0 4px, 4px -4px, -4px 0" : undefined,
-                  }}
-                  title={color.name}
-                >
-                  {isSelected && (
-                    <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-neutral-900 pointer-events-none">
-                      ✓
-                    </span>
-                  )}
-                </button>
-              );
-            })}
+                return (
+                  <motion.button
+                    key={color.name}
+                    type="button"
+                    whileHover={{ scale: 1.15 }}
+                    whileTap={{ scale: 0.9 }}
+                    onClick={() => onBgColorChange(color.value)}
+                    className={`w-8 h-8 rounded-full border relative ${
+                      isSelected
+                        ? "border-white ring-2 ring-primary/45"
+                        : "border-neutral-700"
+                    }`}
+                    style={{
+                      backgroundColor: isTransparent ? undefined : color.value,
+                      backgroundImage: isTransparent
+                        ? "linear-gradient(45deg, #ccc 25%, transparent 25%), linear-gradient(-45deg, #ccc 25%, transparent 25%), linear-gradient(45deg, transparent 75%, #ccc 75%), linear-gradient(-45deg, transparent 75%, #ccc 75%)"
+                        : undefined,
+                      backgroundSize: isTransparent ? "8px 8px" : undefined,
+                      backgroundPosition: isTransparent ? "0 0, 0 4px, 4px -4px, -4px 0" : undefined,
+                    }}
+                    title={color.name}
+                  >
+                    {isSelected && (
+                      <span className="absolute inset-0 flex items-center justify-center text-xs font-bold text-neutral-900 pointer-events-none">
+                        ✓
+                      </span>
+                    )}
+                  </motion.button>
+                );
+              })}
 
-            {/* Custom Color Input */}
-            <div className="flex items-center gap-2 pl-2 border-l border-neutral-800">
-              <input
-                type="color"
-                value={bgColor === "transparent" ? "#ffffff" : bgColor}
-                onChange={(e) => onBgColorChange(e.target.value)}
-                className="w-8 h-8 rounded-lg border border-neutral-700 cursor-pointer bg-transparent"
-              />
-              <span className="text-xs font-mono text-neutral-400 uppercase">
-                {bgColor}
-              </span>
+              {/* Custom Color Input */}
+              <div className="flex items-center gap-2 pl-2 border-l border-neutral-800">
+                <input
+                  type="color"
+                  value={bgColor === "transparent" ? "#ffffff" : bgColor}
+                  onChange={(e) => onBgColorChange(e.target.value)}
+                  className="w-8 h-8 rounded-lg border border-neutral-700 cursor-pointer bg-transparent"
+                />
+                <span className="text-xs font-mono text-neutral-400 uppercase">
+                  {bgColor}
+                </span>
+              </div>
             </div>
-          </div>
-        </div>
-      )}
+          </motion.div>
+        )}
+      </AnimatePresence>
     </div>
   );
 }

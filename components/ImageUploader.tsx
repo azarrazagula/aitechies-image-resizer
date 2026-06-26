@@ -93,7 +93,7 @@ export default function ImageUploader({
           type="file"
           accept="image/png, image/jpeg, image/webp"
           onChange={handleFileInputChange}
-          className="hidden"
+          className="absolute w-px h-px opacity-0 pointer-events-none"
           disabled={disabled}
           multiple
         />
@@ -126,25 +126,30 @@ export default function ImageUploader({
             </p>
           </div>
 
-          <button className="mt-1 inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-dark active:scale-95 text-white font-medium text-sm rounded-xl transition-all shadow-md shadow-primary/10 border border-primary/20">
-            <svg
-              className="w-4 h-4"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+          <div className="flex items-center justify-center mt-2">
+            <button 
+              type="button"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-dark active:scale-95 text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-primary/10 border border-primary/20"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="2"
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
-              />
-            </svg>
-            Select Images
-          </button>
+              <svg
+                className="w-4 h-4"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="2"
+                  d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-8l-4-4m0 0L8 8m4-4v12"
+                />
+              </svg>
+              Select Images
+            </button>
+          </div>
 
-          <p className="text-xs text-neutral-500">
+          <p className="text-xs text-neutral-550 mt-1">
             Supports PNG, JPG, WEBP
           </p>
         </div>

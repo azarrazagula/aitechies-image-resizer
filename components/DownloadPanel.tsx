@@ -10,16 +10,21 @@ interface DownloadPanelProps {
   ) => void;
   isBatch: boolean;
   isLoading: boolean;
+  format: "image/png" | "image/jpeg" | "image/webp";
+  onFormatChange: (format: "image/png" | "image/jpeg" | "image/webp") => void;
+  quality: number;
+  onQualityChange: (quality: number) => void;
 }
 
 export default function DownloadPanel({
   onDownload,
   isBatch,
   isLoading,
+  format,
+  onFormatChange,
+  quality,
+  onQualityChange,
 }: DownloadPanelProps): JSX.Element {
-  const [format, setFormat] = useState<"image/png" | "image/jpeg" | "image/webp">("image/png");
-  const [quality, setQuality] = useState<number>(90); // 90% default
-
   const showQualitySlider = format === "image/jpeg" || format === "image/webp";
 
   return (
@@ -44,7 +49,7 @@ export default function DownloadPanel({
               <button
                 key={fmt.value}
                 type="button"
-                onClick={() => setFormat(fmt.value)}
+                onClick={() => onFormatChange(fmt.value)}
                 className={`py-2.5 rounded-xl border font-semibold text-sm transition-all duration-300 ${
                   isSelected
                     ? "border-primary bg-primary/10 text-white shadow-sm"
@@ -69,7 +74,7 @@ export default function DownloadPanel({
               min="60"
               max="100"
               value={quality}
-              onChange={(e) => setQuality(parseInt(e.target.value))}
+              onChange={(e) => onQualityChange(parseInt(e.target.value))}
               className="w-full accent-primary bg-neutral-800 rounded-lg cursor-pointer h-1.5"
             />
             <span className="text-[10px] text-neutral-500 block leading-tight">
@@ -101,7 +106,7 @@ export default function DownloadPanel({
             <button
               type="button"
               disabled={isLoading}
-              onClick={() => onDownload(format, quality / 100, "individual")}
+              onClick={() => onDownload(format, quality / 100, "single")}
               className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-800 disabled:text-neutral-600 disabled:cursor-not-allowed border border-neutral-800 text-neutral-200 font-bold rounded-xl transition-all"
             >
               {isLoading ? (
@@ -111,7 +116,7 @@ export default function DownloadPanel({
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
               )}
-              Download Files
+              Download Selected
             </button>
           </div>
         ) : (

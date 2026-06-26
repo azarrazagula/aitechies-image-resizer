@@ -1,6 +1,7 @@
 "use client";
 
-import React, { useState } from "react";
+import React, { useState, useEffect } from "react";
+import { motion, AnimatePresence } from "framer-motion";
 import Header from "../components/Header";
 import Footer from "../components/Footer";
 import ImageUploader from "../components/ImageUploader";
@@ -26,19 +27,192 @@ export default function Home(): JSX.Element {
   const [cropOffsets, setCropOffsets] = useState<Record<number, { x: number; y: number }>>({});
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
+  const [format, setFormat] = useState<"image/png" | "image/jpeg" | "image/webp">("image/png");
+  const [quality, setQuality] = useState<number>(90); // 90% default
+  const [resizedSize, setResizedSize] = useState<number | null>(null);
+  const [isCalculatingSize, setIsCalculatingSize] = useState<boolean>(false);
+  const prevFileRef = React.useRef<File | null>(null);
+  const prevIndexRef = React.useRef<number>(0);
+
+  // File-specific settings: key is the index in the files array
+  const [fileSettings, setFileSettings] = useState<Record<number, {
+    category: string;
+    preset: Preset;
+    mode: "fit" | "fill" | "stretch";
+    bgColor: string;
+  }>>({});
+
   const activeFile = files[activeFileIndex] || null;
   const activeCropOffset = cropOffsets[activeFileIndex] || { x: 0, y: 0 };
+
+  // Calculate resized size in background (instant for presets/options, debounced for custom size typing)
+  useEffect(() => {
+    if (!activeFile || !selectedPreset) {
+      setResizedSize(null);
+      setIsCalculatingSize(false);
+      return;
+    }
+
+    // Reset size immediately if active image file itself has changed
+    if (prevFileRef.current !== activeFile || prevIndexRef.current !== activeFileIndex) {
+      setResizedSize(null);
+      prevFileRef.current = activeFile;
+      prevIndexRef.current = activeFileIndex;
+    }
+
+    const currentFileSettings = fileSettings[activeFileIndex] || {
+      category: selectedCategory,
+      preset: selectedPreset,
+      mode: mode,
+      bgColor: bgColor,
+    };
+
+    const targetW = currentFileSettings.preset.w;
+    const targetH = currentFileSettings.preset.h;
+    const targetMode = currentFileSettings.mode;
+    const targetBg = currentFileSettings.bgColor;
+    const targetFormat = format;
+    const targetQuality = quality / 100;
+
+    // Guard: invalid dimensions
+    if (!targetW || !targetH || isNaN(targetW) || isNaN(targetH) || targetW <= 0 || targetH <= 0) {
+      setResizedSize(null);
+      setIsCalculatingSize(false);
+      return;
+    }
+
+    setIsCalculatingSize(true);
+
+    let isCurrent = true;
+    const isCustomMode = currentFileSettings.category === "Custom";
+    const delay = isCustomMode ? 250 : 0; // 250ms debounce only for custom typing
+
+    const calculateSize = async () => {
+      try {
+        const blob = await resizeImage(
+          activeFile,
+          targetW,
+          targetH,
+          targetMode,
+          targetBg,
+          targetFormat,
+          targetQuality,
+          activeCropOffset
+        );
+        if (isCurrent) {
+          setResizedSize(blob.size);
+          setIsCalculatingSize(false);
+        }
+      } catch (err) {
+        console.error("Size calculation failed", err);
+        if (isCurrent) {
+          setIsCalculatingSize(false);
+        }
+      }
+    };
+
+    const timer = setTimeout(calculateSize, delay);
+
+    return () => {
+      isCurrent = false;
+      clearTimeout(timer);
+    };
+  }, [
+    activeFile,
+    activeFileIndex,
+    fileSettings,
+    selectedCategory,
+    selectedPreset,
+    mode,
+    bgColor,
+    activeCropOffset.x,
+    activeCropOffset.y,
+    format,
+    quality,
+  ]);
 
   const handleFilesSelect = (selectedFiles: File[]) => {
     setFiles(selectedFiles);
     setActiveFileIndex(0);
     setCropOffsets({});
+    
+    // Initialize default settings for all files to current presets
+    const initialSettings: Record<number, {
+      category: string;
+      preset: Preset;
+      mode: "fit" | "fill" | "stretch";
+      bgColor: string;
+    }> = {};
+    selectedFiles.forEach((_, idx) => {
+      initialSettings[idx] = {
+        category: selectedCategory,
+        preset: selectedPreset || { name: "Post (Square)", w: 1080, h: 1080 },
+        mode: mode,
+        bgColor: bgColor,
+      };
+    });
+    setFileSettings(initialSettings);
   };
 
   const handlePresetSelect = (preset: Preset, category: string) => {
+    const prevCategory = selectedCategory;
     setSelectedPreset(preset);
     setSelectedCategory(category);
     setCropOffsets({}); // Reset crop offsets when aspect ratio changes
+
+    // Update settings for the active file
+    setFileSettings((prev) => ({
+      ...prev,
+      [activeFileIndex]: {
+        ...prev[activeFileIndex],
+        category,
+        preset,
+      },
+    }));
+
+    // Auto-scroll and focus to custom inputs if switching to Custom category from preset platforms
+    if (category === "Custom" && prevCategory !== "Custom") {
+      setTimeout(() => {
+        const customWInput = document.getElementById("custom-width");
+        if (customWInput) {
+          customWInput.scrollIntoView({ behavior: "smooth", block: "center" });
+          customWInput.focus({ preventScroll: true });
+        }
+      }, 100);
+    }
+  };
+
+  const handleModeSelect = (newMode: "fit" | "fill" | "stretch") => {
+    setMode(newMode);
+    setFileSettings((prev) => ({
+      ...prev,
+      [activeFileIndex]: {
+        ...prev[activeFileIndex],
+        mode: newMode,
+      },
+    }));
+  };
+
+  const handleBgColorSelect = (newColor: string) => {
+    setBgColor(newColor);
+    setFileSettings((prev) => ({
+      ...prev,
+      [activeFileIndex]: {
+        ...prev[activeFileIndex],
+        bgColor: newColor,
+      },
+    }));
+  };
+
+  const handleThumbnailClick = (idx: number) => {
+    setActiveFileIndex(idx);
+    const settings = fileSettings[idx];
+    if (settings) {
+      setSelectedCategory(settings.category);
+      setSelectedPreset(settings.preset);
+      setMode(settings.mode);
+      setBgColor(settings.bgColor);
+    }
   };
 
   const handleCropOffsetChange = (offset: { x: number; y: number }) => {
@@ -54,15 +228,24 @@ export default function Home(): JSX.Element {
     setMode("fit");
     setBgColor("#ffffff");
     setCropOffsets({});
+    setFileSettings({});
+    setFormat("image/png");
+    setQuality(90);
+    setResizedSize(null);
   };
 
-  const getCleanFilename = (originalName: string, ext: string): string => {
+  const getCleanFilename = (
+    originalName: string,
+    ext: string,
+    preset: Preset | null,
+    category: string
+  ): string => {
     const lastDot = originalName.lastIndexOf(".");
     const baseName = lastDot !== -1 ? originalName.substring(0, lastDot) : originalName;
-    const formattedPlatform = selectedCategory.replace(/\s+/g, "").toLowerCase();
-    const formattedPreset = selectedPreset?.name.replace(/\s+/g, "").toLowerCase() || "custom";
-    const w = selectedPreset?.w || 0;
-    const h = selectedPreset?.h || 0;
+    const formattedPlatform = category.replace(/\s+/g, "").toLowerCase();
+    const formattedPreset = preset?.name.replace(/\s+/g, "").toLowerCase() || "custom";
+    const w = preset?.w || 0;
+    const h = preset?.h || 0;
     return `${baseName}_${formattedPlatform}_${formattedPreset}_${w}x${h}.${ext}`;
   };
 
@@ -71,66 +254,123 @@ export default function Home(): JSX.Element {
     quality: number,
     downloadType: "zip" | "individual" | "single"
   ) => {
-    if (files.length === 0 || !selectedPreset) return;
+    if (files.length === 0) return;
+
+    // Validate dimensions before resizing
+    if (downloadType === "single" && activeFile) {
+      const settings = fileSettings[activeFileIndex] || {
+        category: selectedCategory,
+        preset: selectedPreset || { name: "Post (Square)", w: 1080, h: 1080 },
+      };
+      const w = settings.preset?.w ?? 0;
+      const h = settings.preset?.h ?? 0;
+      if (w <= 0 || h <= 0 || isNaN(w) || isNaN(h)) {
+        alert("Please enter valid width and height dimensions before downloading.");
+        return;
+      }
+    } else {
+      for (let i = 0; i < files.length; i++) {
+        const settings = fileSettings[i];
+        if (settings && settings.category === "Custom") {
+          const w = settings.preset?.w ?? 0;
+          const h = settings.preset?.h ?? 0;
+          if (w <= 0 || h <= 0 || isNaN(w) || isNaN(h)) {
+            alert(`Please enter valid width and height dimensions for image #${i + 1} (${files[i].name}) before downloading.`);
+            return;
+          }
+        }
+      }
+    }
+
     setIsProcessing(true);
 
     try {
       const ext = format.split("/")[1] === "jpeg" ? "jpg" : format.split("/")[1];
-      const targetW = selectedPreset.w;
-      const targetH = selectedPreset.h;
 
       if (downloadType === "single" && activeFile) {
-        // Single file download
+        // Single file download using active settings
+        const settings = fileSettings[activeFileIndex] || {
+          category: selectedCategory,
+          preset: selectedPreset || { name: "Post (Square)", w: 1080, h: 1080 },
+          mode: mode,
+          bgColor: bgColor,
+        };
         const blob = await resizeImage(
           activeFile,
-          targetW,
-          targetH,
-          mode,
-          bgColor,
+          settings.preset.w,
+          settings.preset.h,
+          settings.mode,
+          settings.bgColor,
           format,
           quality,
           activeCropOffset
         );
-        const filename = getCleanFilename(activeFile.name, ext);
+        
+        // Update the resizedSize state for the preview
+        setResizedSize(blob.size);
+
+        const filename = getCleanFilename(activeFile.name, ext, settings.preset, settings.category);
         triggerDownload(blob, filename);
       } else if (downloadType === "individual") {
-        // Multi-file download sequentially
+        // Multi-file download sequentially using per-file settings
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const offset = cropOffsets[i] || { x: 0, y: 0 };
+          const settings = fileSettings[i] || {
+            category: selectedCategory,
+            preset: selectedPreset || { name: "Post (Square)", w: 1080, h: 1080 },
+            mode: mode,
+            bgColor: bgColor,
+          };
           const blob = await resizeImage(
             file,
-            targetW,
-            targetH,
-            mode,
-            bgColor,
+            settings.preset.w,
+            settings.preset.h,
+            settings.mode,
+            settings.bgColor,
             format,
             quality,
             offset
           );
-          const filename = getCleanFilename(file.name, ext);
+
+          if (i === activeFileIndex) {
+            setResizedSize(blob.size);
+          }
+
+          const filename = getCleanFilename(file.name, ext, settings.preset, settings.category);
           triggerDownload(blob, filename);
         }
       } else if (downloadType === "zip") {
-        // Multi-file packaged as ZIP
+        // Multi-file packaged as ZIP using per-file settings
         const items: { blob: Blob; filename: string }[] = [];
         for (let i = 0; i < files.length; i++) {
           const file = files[i];
           const offset = cropOffsets[i] || { x: 0, y: 0 };
+          const settings = fileSettings[i] || {
+            category: selectedCategory,
+            preset: selectedPreset || { name: "Post (Square)", w: 1080, h: 1080 },
+            mode: mode,
+            bgColor: bgColor,
+          };
           const blob = await resizeImage(
             file,
-            targetW,
-            targetH,
-            mode,
-            bgColor,
+            settings.preset.w,
+            settings.preset.h,
+            settings.mode,
+            settings.bgColor,
             format,
             quality,
             offset
           );
-          const filename = getCleanFilename(file.name, ext);
+
+          if (i === activeFileIndex) {
+            setResizedSize(blob.size);
+          }
+
+          const filename = getCleanFilename(file.name, ext, settings.preset, settings.category);
           items.push({ blob, filename });
         }
-        const zipFilename = `aitechies_resized_${selectedCategory.toLowerCase()}_${targetW}x${targetH}.zip`;
+        const zipFilename = `aitechies_resized_batch.zip`;
         await triggerBatchZipDownload(items, zipFilename);
       }
     } catch (error) {
@@ -142,7 +382,7 @@ export default function Home(): JSX.Element {
   };
 
   return (
-    <div className="min-h-[100dvh] flex flex-col relative bg-[#0D0D0D] overflow-x-hidden">
+    <div className={`${files.length === 0 ? 'h-[100dvh] overflow-hidden' : 'min-h-[100dvh] overflow-x-hidden'} flex flex-col relative bg-[#0D0D0D]`}>
       {/* Background glow effects */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px] pointer-events-none z-0" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-accent/10 blur-[120px] pointer-events-none z-0" />
@@ -153,12 +393,12 @@ export default function Home(): JSX.Element {
       {/* Main Container */}
       <main className={`w-full flex-1 flex flex-col relative z-10 ${
         files.length > 0 
-          ? "lg:max-w-6xl lg:mx-auto lg:px-8 lg:py-12" 
-          : "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-8 md:py-12"
+          ? "max-w-[1400px] xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 lg:py-12" 
+          : "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6"
       }`}>
         {files.length === 0 ? (
           /* Landing page when no files uploaded */
-          <div className="grid grid-cols-1 lg:grid-cols-12 gap-12 lg:gap-16 items-center w-full py-8 md:py-16">
+          <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center w-full">
             <div className="lg:col-span-7 space-y-6 text-left flex flex-col items-start animate-fade-up">
               {/* Badge */}
               <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary-light text-xs md:text-sm font-medium">
@@ -187,9 +427,14 @@ export default function Home(): JSX.Element {
           </div>
         ) : (
           /* Editor Dashboard */
-          <div className="flex flex-col lg:grid lg:grid-cols-12 gap-0 lg:gap-8 items-stretch lg:items-start w-full py-0 lg:py-4">
+          <motion.div 
+            initial={{ opacity: 0, y: 15 }}
+            animate={{ opacity: 1, y: 0 }}
+            transition={{ duration: 0.5, ease: "easeOut" }}
+            className="flex flex-col lg:grid lg:grid-cols-12 gap-0 lg:gap-12 items-stretch lg:items-start w-full py-0 lg:py-4"
+          >
             {/* Top Preview Column (Right Column on desktop) */}
-            <div className="sticky top-16 lg:sticky lg:top-24 order-1 lg:order-2 lg:col-span-5 flex flex-col bg-[#0D0D0D] border-b lg:border-none border-neutral-900 p-4 lg:p-0 flex-shrink-0 z-30 shadow-md lg:shadow-none">
+            <div className="sticky top-16 lg:sticky lg:top-24 order-1 lg:order-2 lg:col-span-6 xl:col-span-7 flex flex-col bg-[#0D0D0D] border-b lg:border-none border-neutral-900 p-4 lg:p-0 flex-shrink-0 z-30 shadow-md lg:shadow-none">
               {/* Mobile/Tablet Upload New Button (Above Preview) */}
               <div className="flex items-center justify-between mb-3 lg:hidden px-1">
                 <button
@@ -220,6 +465,11 @@ export default function Home(): JSX.Element {
                     bgColor={bgColor}
                     cropOffset={activeCropOffset}
                     onCropOffsetChange={handleCropOffsetChange}
+                    selectedCategory={selectedCategory}
+                    onPresetSelect={handlePresetSelect}
+                    resizedSize={resizedSize}
+                    format={format}
+                    isCalculatingSize={isCalculatingSize}
                   />
                 </div>
               )}
@@ -236,25 +486,32 @@ export default function Home(): JSX.Element {
                       const thumbUrl = URL.createObjectURL(file);
 
                       return (
-                        <button
+                        <motion.button
                           key={file.name + idx}
                           type="button"
-                          onClick={() => {
-                            setActiveFileIndex(idx);
-                          }}
+                          onClick={() => handleThumbnailClick(idx)}
+                          whileHover={{ scale: 1.05 }}
+                          whileTap={{ scale: 0.95 }}
                           className={`w-12 h-12 lg:w-14 lg:h-14 rounded-xl border flex-shrink-0 overflow-hidden relative transition-all duration-300 ${
                             isActive
                               ? "border-primary ring-2 ring-primary/40 scale-105"
                               : "border-neutral-800 hover:border-neutral-600 hover:scale-102"
                           }`}
                         >
+                          {isActive && (
+                            <motion.div 
+                              layoutId="activeThumbRing"
+                              className="absolute inset-0 border-2 border-primary rounded-xl pointer-events-none z-10"
+                              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                            />
+                          )}
                           <img
                             src={thumbUrl}
                             alt={file.name}
                             className="w-full h-full object-cover"
                             onLoad={() => URL.revokeObjectURL(thumbUrl)}
                           />
-                        </button>
+                        </motion.button>
                       );
                     })}
                   </div>
@@ -263,7 +520,7 @@ export default function Home(): JSX.Element {
             </div>
 
             {/* Bottom Controls Column (Left Column on desktop) */}
-            <div className="order-2 lg:order-1 lg:col-span-7 flex-1 p-4 sm:p-6 lg:p-0 space-y-6 bg-[#090909] lg:bg-transparent">
+            <div className="order-2 lg:order-1 lg:col-span-6 xl:col-span-5 flex-1 p-4 sm:p-6 lg:p-0 space-y-6 bg-[#090909] lg:bg-transparent">
               {/* Reset/Upload New button (Desktop Only) */}
               <div className="hidden lg:flex items-center justify-between">
                 <button
@@ -290,9 +547,9 @@ export default function Home(): JSX.Element {
               {/* Resize Mode Selector */}
               <ResizeModeSelector
                 mode={mode}
-                onModeSelect={setMode}
+                onModeSelect={handleModeSelect}
                 bgColor={bgColor}
-                onBgColorChange={setBgColor}
+                onBgColorChange={handleBgColorSelect}
               />
 
               {/* Download Panel */}
@@ -300,6 +557,10 @@ export default function Home(): JSX.Element {
                 onDownload={handleDownload}
                 isBatch={files.length > 1}
                 isLoading={isProcessing}
+                format={format}
+                onFormatChange={setFormat}
+                quality={quality}
+                onQualityChange={setQuality}
               />
 
               {/* Mobile Footer (shown inside scroll container) */}
@@ -307,7 +568,7 @@ export default function Home(): JSX.Element {
                 <Footer />
               </div>
             </div>
-          </div>
+          </motion.div>
         )}
       </main>
 
