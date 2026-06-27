@@ -218,6 +218,26 @@ export default function CanvasPreview({
     visible: { opacity: 1, height: "auto", scale: 1, y: 0 },
   };
 
+  // Calculate relative visual scales for side-by-side comparison
+  let originalScale = 1;
+  let resizedScale = 1;
+
+  if (showOriginal && imageMeta && targetW && targetH) {
+    const scaleW = imageMeta.width / targetW;
+    const scaleH = imageMeta.height / targetH;
+    const scale = Math.max(scaleW, scaleH);
+
+    if (scale < 1) {
+      // Original is smaller than Resized
+      originalScale = Math.max(0.45, scale);
+      resizedScale = 1;
+    } else if (scale > 1) {
+      // Original is larger than Resized
+      originalScale = 1;
+      resizedScale = Math.max(0.45, 1 / scale);
+    }
+  }
+
   return (
     <div className="flex flex-col items-center gap-3 w-full">
 
@@ -288,8 +308,11 @@ export default function CanvasPreview({
 
                 {/* Original image — natural aspect ratio */}
                 <div
-                  className="relative border border-neutral-800/60 rounded-2xl overflow-hidden shadow-lg"
-                  style={checkerStyle}
+                  className="relative border border-neutral-800/60 rounded-2xl overflow-hidden shadow-lg mx-auto"
+                  style={{
+                    ...checkerStyle,
+                    width: showOriginal ? `${originalScale * 100}%` : "100%"
+                  }}
                 >
                   {originalUrl && (
                     <img
@@ -330,12 +353,15 @@ export default function CanvasPreview({
             {/* Resized canvas */}
             <motion.div
               layout
-              className={`relative border rounded-2xl overflow-hidden shadow-lg transition-colors duration-300 ${
+              className={`relative border rounded-2xl overflow-hidden shadow-lg transition-colors duration-300 mx-auto ${
                 isTransitioning
                   ? "border-[#8B5CF6]/60 ring-2 ring-[#8B5CF6]/20"
                   : "border-[#8B5CF6]/20"
               }`}
-              style={resizedWrapperStyle}
+              style={{
+                ...resizedWrapperStyle,
+                width: showOriginal ? `${resizedScale * 100}%` : "100%"
+              }}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => { setIsHovered(false); handleEnd(); }}
             >
