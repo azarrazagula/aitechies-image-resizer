@@ -272,7 +272,7 @@ export default function CanvasPreview({
                 animate="visible"
                 exit="hidden"
                 transition={{ type: "spring", stiffness: 220, damping: 26, mass: 0.9 }}
-                className="flex flex-col gap-2 flex-shrink-0 overflow-hidden"
+                className="flex flex-col gap-2 min-w-0 overflow-hidden"
                 style={{ width: "50%" }}
               >
                 {/* Original label row */}
