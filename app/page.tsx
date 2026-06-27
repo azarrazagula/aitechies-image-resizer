@@ -381,6 +381,54 @@ export default function Home(): JSX.Element {
     }
   };
 
+  const handleCopy = async (
+    targetFormat: "image/png" | "image/jpeg" | "image/webp",
+    targetQuality: number
+  ): Promise<boolean> => {
+    if (files.length === 0 || !activeFile) return false;
+
+    const settings = fileSettings[activeFileIndex] || {
+      category: selectedCategory,
+      preset: selectedPreset || { name: "Post (Square)", w: 1080, h: 1080 },
+      mode: mode,
+      bgColor: bgColor,
+    };
+
+    const w = settings.preset?.w ?? 0;
+    const h = settings.preset?.h ?? 0;
+    if (w <= 0 || h <= 0 || isNaN(w) || isNaN(h)) {
+      alert("Please enter valid width and height dimensions before copying.");
+      return false;
+    }
+
+    try {
+      // 1. Create a promise that does the resizing as PNG directly
+      const pngBlobPromise = resizeImage(
+        activeFile,
+        settings.preset.w,
+        settings.preset.h,
+        settings.mode,
+        settings.bgColor,
+        "image/png", // Always copy as PNG
+        1.0, // Max quality for clipboard
+        activeCropOffset
+      );
+
+      // 2. Instantiate ClipboardItem synchronously inside the click handler context
+      const clipboardItem = new ClipboardItem({
+        "image/png": pngBlobPromise,
+      });
+
+      // 3. Write synchronously to clipboard
+      await navigator.clipboard.write([clipboardItem]);
+      return true;
+    } catch (error) {
+      console.error("Clipboard copy failed:", error);
+      alert("Failed to copy image. Please make sure the page is active/focused and has clipboard permissions.");
+      return false;
+    }
+  };
+
   return (
     <div className={`${files.length === 0 ? 'h-[100dvh] overflow-hidden' : 'min-h-[100dvh] overflow-x-hidden'} flex flex-col relative bg-[#0D0D0D]`}>
       {/* Background glow effects */}
@@ -437,12 +485,13 @@ export default function Home(): JSX.Element {
             <div className="sticky top-16 lg:sticky lg:top-24 order-1 lg:order-2 lg:col-span-6 xl:col-span-7 flex flex-col bg-[#0D0D0D] border-b lg:border-none border-neutral-900 p-4 lg:p-0 flex-shrink-0 z-30 shadow-md lg:shadow-none">
               {/* Mobile/Tablet Upload New Button (Above Preview) */}
               <div className="flex items-center justify-between mb-3 lg:hidden px-1">
-                <button
+                 <button
                   type="button"
                   onClick={handleReset}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all text-xs font-semibold border border-neutral-800"
                 >
-                  ← Upload New Images
+                  <span>←</span>
+                  <span>Upload New Images</span>
                 </button>
                 {files.length > 1 && (
                   <span className="text-xs font-medium text-neutral-400 bg-neutral-900 border border-neutral-800 px-3 py-1 rounded-xl">
@@ -528,7 +577,8 @@ export default function Home(): JSX.Element {
                   onClick={handleReset}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all text-xs font-semibold border border-neutral-800"
                 >
-                  ← Upload New Images
+                  <span>←</span>
+                  <span>Upload New Images</span>
                 </button>
                 {files.length > 1 && (
                   <span className="text-xs font-medium text-neutral-400 bg-neutral-900 border border-neutral-800 px-3 py-1 rounded-xl">
@@ -555,6 +605,7 @@ export default function Home(): JSX.Element {
               {/* Download Panel */}
               <DownloadPanel
                 onDownload={handleDownload}
+                onCopy={handleCopy}
                 isBatch={files.length > 1}
                 isLoading={isProcessing}
                 format={format}

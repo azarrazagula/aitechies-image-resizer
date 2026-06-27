@@ -8,6 +8,10 @@ interface DownloadPanelProps {
     quality: number,
     downloadType: "zip" | "individual" | "single"
   ) => void;
+  onCopy?: (
+    format: "image/png" | "image/jpeg" | "image/webp",
+    quality: number
+  ) => Promise<boolean>;
   isBatch: boolean;
   isLoading: boolean;
   format: "image/png" | "image/jpeg" | "image/webp";
@@ -18,6 +22,7 @@ interface DownloadPanelProps {
 
 export default function DownloadPanel({
   onDownload,
+  onCopy,
   isBatch,
   isLoading,
   format,
@@ -25,7 +30,25 @@ export default function DownloadPanel({
   quality,
   onQualityChange,
 }: DownloadPanelProps): JSX.Element {
+  const [isCopying, setIsCopying] = useState(false);
+  const [copied, setCopied] = useState(false);
   const showQualitySlider = format === "image/jpeg" || format === "image/webp";
+
+  const handleCopyClick = async () => {
+    if (!onCopy || isCopying) return;
+    setIsCopying(true);
+    try {
+      const success = await onCopy(format, quality / 100);
+      if (success) {
+        setCopied(true);
+        setTimeout(() => setCopied(false), 2000);
+      }
+    } catch (err) {
+      console.error("Copy failed", err);
+    } finally {
+      setIsCopying(false);
+    }
+  };
 
   return (
     <div className="glass-card p-6 border-neutral-800 space-y-6">
@@ -84,57 +107,111 @@ export default function DownloadPanel({
         )}
       </div>
 
-      {/* Download trigger buttons */}
+      {/* Download/Copy trigger buttons */}
       <div className="space-y-3 pt-2">
         {isBatch ? (
-          <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+          <div className="flex flex-col gap-3">
+            <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={() => onDownload(format, quality / 100, "zip")}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-primary hover:bg-primary-dark disabled:bg-neutral-800 disabled:text-neutral-600 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-md shadow-primary/10 border border-primary/20"
+              >
+                {isLoading ? (
+                  <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
+                  </svg>
+                )}
+                Download ZIP
+              </button>
+              <button
+                type="button"
+                disabled={isLoading}
+                onClick={() => onDownload(format, quality / 100, "single")}
+                className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-800 disabled:text-neutral-600 disabled:cursor-not-allowed border border-neutral-800 text-neutral-200 font-bold rounded-xl transition-all"
+              >
+                {isLoading ? (
+                  <span className="w-4 h-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
+                ) : (
+                  <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                  </svg>
+                )}
+                Download Selected
+              </button>
+            </div>
+            {onCopy && (
+              <button
+                type="button"
+                disabled={isLoading || isCopying}
+                onClick={handleCopyClick}
+                className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold transition-all border text-xs ${
+                  copied
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400"
+                    : "bg-[#161616]/40 hover:bg-[#161616]/70 border-neutral-800 text-neutral-350 hover:text-white"
+                }`}
+              >
+                {isCopying ? (
+                  <span className="w-3.5 h-3.5 border-2 border-neutral-450 border-t-transparent rounded-full animate-spin" />
+                ) : copied ? (
+                  <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                  </svg>
+                )}
+                {copied ? "Copied Selected to Clipboard!" : "Copy Selected to Clipboard"}
+              </button>
+            )}
+          </div>
+        ) : (
+          <div className="flex flex-col gap-3">
             <button
               type="button"
               disabled={isLoading}
-              onClick={() => onDownload(format, quality / 100, "zip")}
+              onClick={() => onDownload(format, quality / 100, "single")}
               className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-primary hover:bg-primary-dark disabled:bg-neutral-800 disabled:text-neutral-600 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-md shadow-primary/10 border border-primary/20"
             >
               {isLoading ? (
                 <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
               ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M19 14l-7 7m0 0l-7-7m7 7V3" />
-                </svg>
-              )}
-              Download ZIP
-            </button>
-            <button
-              type="button"
-              disabled={isLoading}
-              onClick={() => onDownload(format, quality / 100, "single")}
-              className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-800 disabled:text-neutral-600 disabled:cursor-not-allowed border border-neutral-800 text-neutral-200 font-bold rounded-xl transition-all"
-            >
-              {isLoading ? (
-                <span className="w-4 h-4 border-2 border-neutral-400 border-t-transparent rounded-full animate-spin" />
-              ) : (
-                <svg className="w-4 h-4" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
                   <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
                 </svg>
               )}
-              Download Selected
+              Download Resized Image
             </button>
-          </div>
-        ) : (
-          <button
-            type="button"
-            disabled={isLoading}
-            onClick={() => onDownload(format, quality / 100, "single")}
-            className="w-full flex items-center justify-center gap-2 py-3 px-4 bg-primary hover:bg-primary-dark disabled:bg-neutral-800 disabled:text-neutral-600 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-md shadow-primary/10 border border-primary/20"
-          >
-            {isLoading ? (
-              <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
-            ) : (
-              <svg className="w-5 h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24" xmlns="http://www.w3.org/2000/svg">
-                <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
-              </svg>
+            {onCopy && (
+              <button
+                type="button"
+                disabled={isLoading || isCopying}
+                onClick={handleCopyClick}
+                className={`w-full flex items-center justify-center gap-2 py-2.5 px-4 rounded-xl font-bold transition-all border text-xs ${
+                  copied
+                    ? "bg-emerald-500/10 border-emerald-500/30 text-emerald-400 shadow-sm"
+                    : "bg-[#161616]/40 hover:bg-[#161616]/70 border-neutral-800 text-neutral-350 hover:text-white"
+                }`}
+              >
+                {isCopying ? (
+                  <span className="w-3.5 h-3.5 border-2 border-neutral-450 border-t-transparent rounded-full animate-spin" />
+                ) : copied ? (
+                  <svg className="w-3.5 h-3.5 text-emerald-400" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2.5" d="M5 13l4 4L19 7" />
+                  </svg>
+                ) : (
+                  <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M8 5H6a2 2 0 00-2 2v12a2 2 0 002 2h10a2 2 0 002-2v-1M8 5a2 2 0 002 2h2a2 2 0 002-2M8 5a2 2 0 012-2h2a2 2 0 012 2m0 0h2a2 2 0 012 2v3m2 4H10m0 0l3-3m-3 3l3 3" />
+                  </svg>
+                )}
+                {copied ? "Copied to Clipboard!" : "Copy to Clipboard"}
+              </button>
             )}
-            Download Resized Image
-          </button>
+          </div>
         )}
       </div>
     </div>
