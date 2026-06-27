@@ -35,14 +35,13 @@ export default function CanvasPreview({
 }: CanvasPreviewProps): JSX.Element {
   const canvasRef = useRef<HTMLCanvasElement>(null);       // Desktop visible canvas
   const mobileCanvasRef = useRef<HTMLCanvasElement>(null); // Mobile visible canvas (synced)
-  const originalCanvasRef = useRef<HTMLCanvasElement>(null);
   const isDragging = useRef<boolean>(false);
   const dragStart = useRef<{ x: number; y: number; offsetX: number; offsetY: number }>({
     x: 0, y: 0, offsetX: 0, offsetY: 0,
   });
 
-
   const [imageMeta, setImageMeta] = useState<{ width: number; height: number } | null>(null);
+  const [originalUrl, setOriginalUrl] = useState<string>(""); // Stable URL for <img> preview
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [activeDrag, setActiveDrag] = useState<boolean>(false);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
@@ -100,13 +99,17 @@ export default function CanvasPreview({
     return () => clearTimeout(t);
   }, [targetW, targetH, mode, file]);
 
-  // ── Image metadata ─────────────────────────────────────
+  // ── Image metadata + stable original URL ──────────────
   useEffect(() => {
     const img = new Image();
     const url = URL.createObjectURL(file);
+    setOriginalUrl(url);
     img.onload = () => setImageMeta({ width: img.width, height: img.height });
     img.src = url;
-    return () => URL.revokeObjectURL(url);
+    return () => {
+      URL.revokeObjectURL(url);
+      setOriginalUrl("");
+    };
   }, [file]);
 
   // ── Draw resized canvas + sync to mobile canvas ────────
@@ -151,33 +154,6 @@ export default function CanvasPreview({
   }, [file, targetW, targetH, mode, bgColor, cropOffset, format]);
 
 
-  // ── Draw original canvas (desktop side-by-side) ────────
-  useEffect(() => {
-    const canvas = originalCanvasRef.current;
-    if (!canvas) return;
-    const ctx = canvas.getContext("2d");
-    if (!ctx || !targetW || !targetH) return;
-    const img = new Image();
-    const url = URL.createObjectURL(file);
-    img.onload = () => {
-      canvas.width = targetW;
-      canvas.height = targetH;
-      ctx.clearRect(0, 0, targetW, targetH);
-      // Draw checkerboard bg
-      const tileSize = Math.max(8, Math.round(targetW / 80));
-      for (let row = 0; row * tileSize < targetH; row++) {
-        for (let col = 0; col * tileSize < targetW; col++) {
-          ctx.fillStyle = (row + col) % 2 === 0 ? "#27272A" : "#18181B";
-          ctx.fillRect(col * tileSize, row * tileSize, tileSize, tileSize);
-        }
-      }
-      // Letterbox original image
-      const scale = Math.min(targetW / img.width, targetH / img.height);
-      ctx.drawImage(img, (targetW - img.width * scale) / 2, (targetH - img.height * scale) / 2, img.width * scale, img.height * scale);
-      URL.revokeObjectURL(url);
-    };
-    img.src = url;
-  }, [file, targetW, targetH]);
 
   // ── Crop drag ──────────────────────────────────────────
   const handleStart = (clientX: number, clientY: number) => {
@@ -232,7 +208,7 @@ export default function CanvasPreview({
           ═══════════════════════════════════════════════════════ */}
       <div className="hidden lg:grid lg:grid-cols-2 gap-5 w-full">
 
-        {/* ── Original side ── */}
+        {/* ── Original side — natural image dimensions ── */}
         <div className="flex flex-col gap-2.5">
           <div className="flex items-center justify-between px-1">
             <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 flex items-center gap-1.5">
@@ -243,15 +219,22 @@ export default function CanvasPreview({
               {imageMeta ? `${imageMeta.width}×${imageMeta.height}` : "—"}
             </span>
           </div>
-          <div
-            className="relative border border-neutral-800/70 rounded-2xl overflow-hidden shadow-lg"
-            style={wrapperBg}
+          {/* img tag → shows actual upload aspect ratio, not forced into target dimensions */}
+          <div className="relative border border-neutral-800/70 rounded-2xl overflow-hidden shadow-lg bg-[#18181B]"
+            style={{
+              backgroundImage: "linear-gradient(45deg,#27272A 25%,transparent 25%),linear-gradient(-45deg,#27272A 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#27272A 75%),linear-gradient(-45deg,transparent 75%,#27272A 75%)",
+              backgroundSize: "16px 16px",
+              backgroundPosition: "0 0,0 8px,8px -8px,-8px 0",
+            }}
           >
-            <canvas
-              ref={originalCanvasRef}
-              className="w-full h-auto block"
-              style={{ aspectRatio: `${targetW}/${targetH}` }}
-            />
+            {originalUrl && (
+              <img
+                src={originalUrl}
+                alt="Original uploaded image"
+                className="w-full h-auto block"
+                draggable={false}
+              />
+            )}
           </div>
         </div>
 

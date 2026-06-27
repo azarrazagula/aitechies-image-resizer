@@ -492,7 +492,7 @@ export default function Home(): JSX.Element {
             transition={{ duration: 0.5, ease: "easeOut" }}
             className="flex flex-col md:grid md:grid-cols-12 gap-0 md:gap-8 lg:gap-12 items-stretch md:items-start w-full py-0 md:py-4">
             {/* Top Preview Column (Right Column on desktop) */}
-            <div className="md:sticky md:top-24 order-1 md:order-2 md:col-span-6 xl:col-span-7 flex flex-col bg-[#0D0D0D] md:bg-transparent border-b md:border-none border-neutral-900 p-4 md:p-0 flex-shrink-0 z-10 shadow-md md:shadow-none">
+            <div className="sticky top-16 md:top-24 order-1 md:order-2 md:col-span-6 xl:col-span-7 flex flex-col bg-[#0D0D0D] md:bg-transparent border-b md:border-none border-neutral-900 p-4 md:p-0 flex-shrink-0 z-20 md:z-10 shadow-md md:shadow-none">
               {/* Mobile/Tablet Upload New Button (Above Preview) */}
               <div className="flex items-center justify-between mb-3 md:hidden px-1">
                 <button
