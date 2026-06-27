@@ -404,114 +404,120 @@ export default function CanvasPreview({
       </motion.div>
 
       {/* ══════════════════════════════════════════════════════
-          Dimension display pill + collapsible editor
+          Dimension display pill (instantly editable inline when clicked)
           ══════════════════════════════════════════════════════ */}
-      <div className="flex flex-col items-center gap-2 w-full mt-0.5">
-
-        {/* Pill: shows current dims, click to expand editor */}
-        <motion.button
-          onClick={() => setShowDimEdit(v => !v)}
-          whileHover={{ scale: 1.03 }}
-          whileTap={{ scale: 0.97 }}
-          className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl border transition-all duration-300 select-none group ${
+      <div className="flex flex-col items-center w-full mt-0.5 select-none">
+        <motion.div
+          layout
+          transition={{ type: "spring", stiffness: 300, damping: 25 }}
+          className={`flex items-center gap-3 px-4 py-2 rounded-2xl border transition-all duration-300 ${
             showDimEdit
-              ? "bg-[#1a1a1a] border-[#8B5CF6]/40 shadow-[0_0_16px_#8B5CF640]"
-              : "bg-[#161616]/80 border-neutral-800 hover:border-neutral-700"
+              ? "bg-[#18181B] border-[#8B5CF6]/50 shadow-[0_0_20px_rgba(139,92,246,0.25)]"
+              : "bg-[#161616]/80 border-neutral-800 hover:border-neutral-700 cursor-pointer"
           }`}
+          onClick={() => {
+            if (!showDimEdit) setShowDimEdit(true);
+          }}
         >
-          {/* Width display */}
-          <span className="flex items-center gap-1.5">
-            {/* ↔ horizontal arrows */}
-            <span className="text-neutral-500 text-[10px] font-bold">↔</span>
-            <span className="text-[10px] text-neutral-400 font-semibold">Width</span>
-            <span className={`font-mono font-bold text-sm transition-colors ${showDimEdit ? "text-[#8B5CF6]" : "text-neutral-200"}`}>
-              {localW}
-            </span>
-            <span className="text-neutral-600 text-[10px]">px</span>
-          </span>
+          <AnimatePresence mode="wait">
+            {!showDimEdit ? (
+              <motion.div
+                key="read-mode"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                className="flex items-center gap-3"
+              >
+                {/* Width label & value */}
+                <span className="flex items-center gap-1.5">
+                  <span className="text-neutral-500 text-[11px] font-bold">↔</span>
+                  <span className="text-[10px] text-neutral-450 font-semibold">Width</span>
+                  <span className="font-mono font-bold text-sm text-neutral-250">
+                    {localW}
+                  </span>
+                  <span className="text-neutral-600 text-[10px]">px</span>
+                </span>
 
-          <span className="text-neutral-700 font-bold text-sm">×</span>
+                <span className="text-neutral-700 font-bold text-sm">×</span>
 
-          {/* Height display */}
-          <span className="flex items-center gap-1.5">
-            {/* ↕ vertical arrows */}
-            <span className="text-neutral-500 text-[10px] font-bold">↕</span>
-            <span className="text-[10px] text-neutral-400 font-semibold">Height</span>
-            <span className={`font-mono font-bold text-sm transition-colors ${showDimEdit ? "text-[#8B5CF6]" : "text-neutral-200"}`}>
-              {localH}
-            </span>
-            <span className="text-neutral-600 text-[10px]">px</span>
-          </span>
+                {/* Height label & value */}
+                <span className="flex items-center gap-1.5">
+                  <span className="text-neutral-500 text-[11px] font-bold">↕</span>
+                  <span className="text-[10px] text-neutral-450 font-semibold">Height</span>
+                  <span className="font-mono font-bold text-sm text-neutral-250">
+                    {localH}
+                  </span>
+                  <span className="text-neutral-600 text-[10px]">px</span>
+                </span>
 
-          {/* Edit icon — rotates when open */}
-          <motion.span
-            animate={{ rotate: showDimEdit ? 45 : 0 }}
-            transition={{ type: "spring", stiffness: 280, damping: 22 }}
-            className="text-neutral-500 group-hover:text-neutral-400 text-sm ml-1 inline-block"
-          >
-            ✎
-          </motion.span>
-        </motion.button>
-
-        {/* Collapsible editor panel — spring expand/collapse */}
-        <AnimatePresence>
-          {showDimEdit && (
-            <motion.div
-              key="dim-editor"
-              variants={dimEditVariants}
-              initial="hidden"
-              animate="visible"
-              exit="hidden"
-              transition={{ type: "spring", stiffness: 280, damping: 24 }}
-              className="overflow-hidden w-full flex justify-center"
-            >
-              <div className="flex items-center gap-2 px-4 py-3 bg-[#161616] border border-[#8B5CF6]/20 rounded-2xl shadow-lg shadow-black/30">
-
+                {/* Edit icon */}
+                <span className="text-neutral-500 hover:text-neutral-400 text-sm ml-0.5">
+                  ✎
+                </span>
+              </motion.div>
+            ) : (
+              <motion.div
+                key="edit-mode"
+                initial={{ opacity: 0, scale: 0.95 }}
+                animate={{ opacity: 1, scale: 1 }}
+                exit={{ opacity: 0, scale: 0.95 }}
+                transition={{ duration: 0.15 }}
+                className="flex items-center gap-2"
+                onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inputs
+              >
                 {/* Width input */}
-                <label className="flex items-center gap-2 bg-[#111]/60 border border-neutral-800 rounded-xl px-3 py-2 transition-all focus-within:border-[#8B5CF6]/50 focus-within:bg-[#18182A]/60">
-                  <span className="text-neutral-500 text-[10px] font-bold select-none">↔</span>
-                  <span className="text-neutral-400 text-[10px] font-semibold select-none">Width</span>
+                <label className="flex items-center gap-1.5 bg-[#111]/60 border border-neutral-800/80 rounded-xl px-2.5 py-1.5 focus-within:border-[#8B5CF6]/50 transition-colors">
+                  <span className="text-neutral-500 text-[11px] font-bold">↔</span>
+                  <span className="text-[10px] text-neutral-400 font-semibold">Width</span>
                   <input
                     type="number"
                     min="1"
                     max="10000"
                     value={localW}
                     onChange={(e) => setLocalW(e.target.value)}
-                    className="w-16 bg-transparent font-mono font-bold text-sm text-[#8B5CF6] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") setShowDimEdit(false);
+                    }}
+                    className="w-14 bg-transparent font-mono font-bold text-sm text-[#8B5CF6] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    autoFocus
                   />
-                  <span className="text-neutral-600 text-[10px] select-none">px</span>
+                  <span className="text-neutral-600 text-[10px]">px</span>
                 </label>
 
-                <span className="text-neutral-700 text-sm font-bold select-none">×</span>
+                <span className="text-neutral-700 font-bold text-sm">×</span>
 
                 {/* Height input */}
-                <label className="flex items-center gap-2 bg-[#111]/60 border border-neutral-800 rounded-xl px-3 py-2 transition-all focus-within:border-[#8B5CF6]/50 focus-within:bg-[#18182A]/60">
-                  <span className="text-neutral-500 text-[10px] font-bold select-none">↕</span>
-                  <span className="text-neutral-400 text-[10px] font-semibold select-none">Height</span>
+                <label className="flex items-center gap-1.5 bg-[#111]/60 border border-neutral-800/80 rounded-xl px-2.5 py-1.5 focus-within:border-[#8B5CF6]/50 transition-colors">
+                  <span className="text-neutral-500 text-[11px] font-bold">↕</span>
+                  <span className="text-[10px] text-neutral-400 font-semibold">Height</span>
                   <input
                     type="number"
                     min="1"
                     max="10000"
                     value={localH}
                     onChange={(e) => setLocalH(e.target.value)}
-                    className="w-16 bg-transparent font-mono font-bold text-sm text-[#8B5CF6] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    onKeyDown={(e) => {
+                      if (e.key === "Enter") setShowDimEdit(false);
+                    }}
+                    className="w-14 bg-transparent font-mono font-bold text-sm text-[#8B5CF6] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
-                  <span className="text-neutral-600 text-[10px] select-none">px</span>
+                  <span className="text-neutral-600 text-[10px]">px</span>
                 </label>
 
-                {/* Close editor button */}
+                {/* Confirm/Save button */}
                 <motion.button
                   onClick={() => setShowDimEdit(false)}
-                  whileHover={{ scale: 1.1 }}
-                  whileTap={{ scale: 0.9 }}
-                  className="w-7 h-7 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-400 hover:text-neutral-200 hover:bg-neutral-700 transition-all text-xs"
+                  whileHover={{ scale: 1.05 }}
+                  whileTap={{ scale: 0.95 }}
+                  className="w-7 h-7 rounded-xl bg-neutral-800 border border-neutral-700 hover:border-[#8B5CF6]/40 hover:bg-[#1f1f2e] flex items-center justify-center text-neutral-300 hover:text-[#8B5CF6] transition-colors"
                 >
-                  ✕
+                  ✓
                 </motion.button>
-              </div>
-            </motion.div>
-          )}
-        </AnimatePresence>
+              </motion.div>
+            )}
+          </AnimatePresence>
+        </motion.div>
       </div>
 
       {/* ══════════════════════════════════════════════════════
