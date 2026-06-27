@@ -309,7 +309,7 @@ export default function CanvasPreview({
             layout
             transition={{ type: "spring", stiffness: 200, damping: 26 }}
             className={`flex flex-col gap-2 min-w-0 ${
-              showOriginal ? "flex-1" : "max-w-[450px] w-full mx-auto"
+              showOriginal ? "flex-1" : "max-w-[380px] w-full mx-auto"
             }`}
           >
             {/* Resized label row */}
