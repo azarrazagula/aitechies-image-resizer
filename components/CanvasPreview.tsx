@@ -308,16 +308,16 @@ export default function CanvasPreview({
           <motion.div
             layout
             transition={{ type: "spring", stiffness: 200, damping: 26 }}
-            className={`flex flex-col gap-2 min-w-0 transition-all duration-300 ${
+            className={`flex flex-col gap-2 min-w-0 ${
               showOriginal ? "flex-1" : "max-w-[450px] w-full mx-auto"
             }`}
           >
             {/* Resized label row */}
             <div className="flex items-center justify-between px-0.5">
-              <span className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 transition-colors ${
+              <span className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 transition-colors duration-300 ${
                 isTransitioning ? "text-[#8B5CF6]" : "text-[#8B5CF6]/80"
               }`}>
-                <span className={`w-1.5 h-1.5 rounded-full inline-block ${
+                <span className={`w-1.5 h-1.5 rounded-full inline-block transition-colors duration-300 ${
                   isTransitioning ? "bg-[#8B5CF6] animate-pulse" : "bg-[#8B5CF6]"
                 }`} />
                 Resized
@@ -330,7 +330,7 @@ export default function CanvasPreview({
             {/* Resized canvas */}
             <motion.div
               layout
-              className={`relative border rounded-2xl overflow-hidden shadow-lg transition-all duration-300 ${
+              className={`relative border rounded-2xl overflow-hidden shadow-lg transition-colors duration-300 ${
                 isTransitioning
                   ? "border-[#8B5CF6]/60 ring-2 ring-[#8B5CF6]/20"
                   : "border-[#8B5CF6]/20"
@@ -356,7 +356,7 @@ export default function CanvasPreview({
                 onTouchStart={(e) => { if (e.touches[0]) handleStart(e.touches[0].clientX, e.touches[0].clientY); }}
                 onTouchMove={(e) => { if (e.touches[0]) handleMove(e.touches[0].clientX, e.touches[0].clientY); }}
                 onTouchEnd={handleEnd}
-                className={`w-full h-auto block select-none transition-all duration-300 ${
+                className={`w-full h-auto block select-none transition-opacity duration-300 ${
                   isTransitioning ? "opacity-75 blur-[1.5px]" : "opacity-100"
                 } ${mode === "fill" ? (activeDrag ? "cursor-grabbing" : "cursor-grab") : "cursor-default"}`}
                 style={{ aspectRatio: `${targetW}/${targetH}`, ...resizedCanvasStyle }}
