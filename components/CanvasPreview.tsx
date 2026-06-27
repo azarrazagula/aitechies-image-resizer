@@ -304,11 +304,13 @@ export default function CanvasPreview({
             )}
           </AnimatePresence>
 
-          {/* Resized panel — always visible, expands to fill when original hidden */}
+          {/* Resized panel — always visible, centered and constrained when original is hidden */}
           <motion.div
             layout
             transition={{ type: "spring", stiffness: 200, damping: 26 }}
-            className="flex flex-col gap-2 flex-1 min-w-0"
+            className={`flex flex-col gap-2 min-w-0 transition-all duration-300 ${
+              showOriginal ? "flex-1" : "max-w-[450px] w-full mx-auto"
+            }`}
           >
             {/* Resized label row */}
             <div className="flex items-center justify-between px-0.5">
