@@ -51,10 +51,5 @@ export const PLATFORMS: PlatformPresets[] = [
       { name: "Display Picture", w: 500, h: 500 },
     ],
   },
-  {
-    category: "Custom",
-    presets: [
-      { name: "User-defined", w: 0, h: 0 },
-    ],
-  },
 ];
+

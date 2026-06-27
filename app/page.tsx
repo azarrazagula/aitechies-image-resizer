@@ -24,10 +24,14 @@ export default function Home(): JSX.Element {
   const [mode, setMode] = useState<"fit" | "fill" | "stretch">("fit");
   const [bgColor, setBgColor] = useState<string>("#ffffff");
   const [activeFileIndex, setActiveFileIndex] = useState<number>(0);
-  const [cropOffsets, setCropOffsets] = useState<Record<number, { x: number; y: number }>>({});
+  const [cropOffsets, setCropOffsets] = useState<
+    Record<number, { x: number; y: number }>
+  >({});
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
 
-  const [format, setFormat] = useState<"image/png" | "image/jpeg" | "image/webp">("image/png");
+  const [format, setFormat] = useState<
+    "image/png" | "image/jpeg" | "image/webp"
+  >("image/png");
   const [quality, setQuality] = useState<number>(90); // 90% default
   const [resizedSize, setResizedSize] = useState<number | null>(null);
   const [isCalculatingSize, setIsCalculatingSize] = useState<boolean>(false);
@@ -35,12 +39,17 @@ export default function Home(): JSX.Element {
   const prevIndexRef = React.useRef<number>(0);
 
   // File-specific settings: key is the index in the files array
-  const [fileSettings, setFileSettings] = useState<Record<number, {
-    category: string;
-    preset: Preset;
-    mode: "fit" | "fill" | "stretch";
-    bgColor: string;
-  }>>({});
+  const [fileSettings, setFileSettings] = useState<
+    Record<
+      number,
+      {
+        category: string;
+        preset: Preset;
+        mode: "fit" | "fill" | "stretch";
+        bgColor: string;
+      }
+    >
+  >({});
 
   const activeFile = files[activeFileIndex] || null;
   const activeCropOffset = cropOffsets[activeFileIndex] || { x: 0, y: 0 };
@@ -54,7 +63,10 @@ export default function Home(): JSX.Element {
     }
 
     // Reset size immediately if active image file itself has changed
-    if (prevFileRef.current !== activeFile || prevIndexRef.current !== activeFileIndex) {
+    if (
+      prevFileRef.current !== activeFile ||
+      prevIndexRef.current !== activeFileIndex
+    ) {
       setResizedSize(null);
       prevFileRef.current = activeFile;
       prevIndexRef.current = activeFileIndex;
@@ -75,7 +87,14 @@ export default function Home(): JSX.Element {
     const targetQuality = quality / 100;
 
     // Guard: invalid dimensions
-    if (!targetW || !targetH || isNaN(targetW) || isNaN(targetH) || targetW <= 0 || targetH <= 0) {
+    if (
+      !targetW ||
+      !targetH ||
+      isNaN(targetW) ||
+      isNaN(targetH) ||
+      targetW <= 0 ||
+      targetH <= 0
+    ) {
       setResizedSize(null);
       setIsCalculatingSize(false);
       return;
@@ -84,8 +103,9 @@ export default function Home(): JSX.Element {
     setIsCalculatingSize(true);
 
     let isCurrent = true;
-    const isCustomMode = currentFileSettings.category === "Custom";
-    const delay = isCustomMode ? 250 : 0; // 250ms debounce only for custom typing
+    // Debounce when user is typing inline custom dimensions (preset name = "User-defined")
+    const isCustomDimension = currentFileSettings.preset.name === "User-defined";
+    const delay = isCustomDimension ? 250 : 0;
 
     const calculateSize = async () => {
       try {
@@ -97,7 +117,7 @@ export default function Home(): JSX.Element {
           targetBg,
           targetFormat,
           targetQuality,
-          activeCropOffset
+          activeCropOffset,
         );
         if (isCurrent) {
           setResizedSize(blob.size);
@@ -135,14 +155,17 @@ export default function Home(): JSX.Element {
     setFiles(selectedFiles);
     setActiveFileIndex(0);
     setCropOffsets({});
-    
+
     // Initialize default settings for all files to current presets
-    const initialSettings: Record<number, {
-      category: string;
-      preset: Preset;
-      mode: "fit" | "fill" | "stretch";
-      bgColor: string;
-    }> = {};
+    const initialSettings: Record<
+      number,
+      {
+        category: string;
+        preset: Preset;
+        mode: "fit" | "fill" | "stretch";
+        bgColor: string;
+      }
+    > = {};
     selectedFiles.forEach((_, idx) => {
       initialSettings[idx] = {
         category: selectedCategory,
@@ -170,16 +193,6 @@ export default function Home(): JSX.Element {
       },
     }));
 
-    // Auto-scroll and focus to custom inputs if switching to Custom category from preset platforms
-    if (category === "Custom" && prevCategory !== "Custom") {
-      setTimeout(() => {
-        const customWInput = document.getElementById("custom-width");
-        if (customWInput) {
-          customWInput.scrollIntoView({ behavior: "smooth", block: "center" });
-          customWInput.focus({ preventScroll: true });
-        }
-      }, 100);
-    }
   };
 
   const handleModeSelect = (newMode: "fit" | "fill" | "stretch") => {
@@ -238,12 +251,14 @@ export default function Home(): JSX.Element {
     originalName: string,
     ext: string,
     preset: Preset | null,
-    category: string
+    category: string,
   ): string => {
     const lastDot = originalName.lastIndexOf(".");
-    const baseName = lastDot !== -1 ? originalName.substring(0, lastDot) : originalName;
+    const baseName =
+      lastDot !== -1 ? originalName.substring(0, lastDot) : originalName;
     const formattedPlatform = category.replace(/\s+/g, "").toLowerCase();
-    const formattedPreset = preset?.name.replace(/\s+/g, "").toLowerCase() || "custom";
+    const formattedPreset =
+      preset?.name.replace(/\s+/g, "").toLowerCase() || "custom";
     const w = preset?.w || 0;
     const h = preset?.h || 0;
     return `${baseName}_${formattedPlatform}_${formattedPreset}_${w}x${h}.${ext}`;
@@ -252,7 +267,7 @@ export default function Home(): JSX.Element {
   const handleDownload = async (
     format: "image/png" | "image/jpeg" | "image/webp",
     quality: number,
-    downloadType: "zip" | "individual" | "single"
+    downloadType: "zip" | "individual" | "single",
   ) => {
     if (files.length === 0) return;
 
@@ -265,17 +280,21 @@ export default function Home(): JSX.Element {
       const w = settings.preset?.w ?? 0;
       const h = settings.preset?.h ?? 0;
       if (w <= 0 || h <= 0 || isNaN(w) || isNaN(h)) {
-        alert("Please enter valid width and height dimensions before downloading.");
+        alert(
+          "Please enter valid width and height dimensions before downloading.",
+        );
         return;
       }
     } else {
       for (let i = 0; i < files.length; i++) {
         const settings = fileSettings[i];
-        if (settings && settings.category === "Custom") {
+        if (settings) {
           const w = settings.preset?.w ?? 0;
           const h = settings.preset?.h ?? 0;
           if (w <= 0 || h <= 0 || isNaN(w) || isNaN(h)) {
-            alert(`Please enter valid width and height dimensions for image #${i + 1} (${files[i].name}) before downloading.`);
+            alert(
+              `Please enter valid width and height dimensions for image #${i + 1} (${files[i].name}) before downloading.`,
+            );
             return;
           }
         }
@@ -285,7 +304,8 @@ export default function Home(): JSX.Element {
     setIsProcessing(true);
 
     try {
-      const ext = format.split("/")[1] === "jpeg" ? "jpg" : format.split("/")[1];
+      const ext =
+        format.split("/")[1] === "jpeg" ? "jpg" : format.split("/")[1];
 
       if (downloadType === "single" && activeFile) {
         // Single file download using active settings
@@ -303,13 +323,18 @@ export default function Home(): JSX.Element {
           settings.bgColor,
           format,
           quality,
-          activeCropOffset
+          activeCropOffset,
         );
-        
+
         // Update the resizedSize state for the preview
         setResizedSize(blob.size);
 
-        const filename = getCleanFilename(activeFile.name, ext, settings.preset, settings.category);
+        const filename = getCleanFilename(
+          activeFile.name,
+          ext,
+          settings.preset,
+          settings.category,
+        );
         triggerDownload(blob, filename);
       } else if (downloadType === "individual") {
         // Multi-file download sequentially using per-file settings
@@ -318,7 +343,11 @@ export default function Home(): JSX.Element {
           const offset = cropOffsets[i] || { x: 0, y: 0 };
           const settings = fileSettings[i] || {
             category: selectedCategory,
-            preset: selectedPreset || { name: "Post (Square)", w: 1080, h: 1080 },
+            preset: selectedPreset || {
+              name: "Post (Square)",
+              w: 1080,
+              h: 1080,
+            },
             mode: mode,
             bgColor: bgColor,
           };
@@ -330,14 +359,19 @@ export default function Home(): JSX.Element {
             settings.bgColor,
             format,
             quality,
-            offset
+            offset,
           );
 
           if (i === activeFileIndex) {
             setResizedSize(blob.size);
           }
 
-          const filename = getCleanFilename(file.name, ext, settings.preset, settings.category);
+          const filename = getCleanFilename(
+            file.name,
+            ext,
+            settings.preset,
+            settings.category,
+          );
           triggerDownload(blob, filename);
         }
       } else if (downloadType === "zip") {
@@ -348,7 +382,11 @@ export default function Home(): JSX.Element {
           const offset = cropOffsets[i] || { x: 0, y: 0 };
           const settings = fileSettings[i] || {
             category: selectedCategory,
-            preset: selectedPreset || { name: "Post (Square)", w: 1080, h: 1080 },
+            preset: selectedPreset || {
+              name: "Post (Square)",
+              w: 1080,
+              h: 1080,
+            },
             mode: mode,
             bgColor: bgColor,
           };
@@ -360,14 +398,19 @@ export default function Home(): JSX.Element {
             settings.bgColor,
             format,
             quality,
-            offset
+            offset,
           );
 
           if (i === activeFileIndex) {
             setResizedSize(blob.size);
           }
 
-          const filename = getCleanFilename(file.name, ext, settings.preset, settings.category);
+          const filename = getCleanFilename(
+            file.name,
+            ext,
+            settings.preset,
+            settings.category,
+          );
           items.push({ blob, filename });
         }
         const zipFilename = `aitechies_resized_batch.zip`;
@@ -381,56 +424,23 @@ export default function Home(): JSX.Element {
     }
   };
 
-  const handleCopy = async (
-    targetFormat: "image/png" | "image/jpeg" | "image/webp",
-    targetQuality: number
-  ): Promise<boolean> => {
-    if (files.length === 0 || !activeFile) return false;
-
-    const settings = fileSettings[activeFileIndex] || {
-      category: selectedCategory,
-      preset: selectedPreset || { name: "Post (Square)", w: 1080, h: 1080 },
-      mode: mode,
-      bgColor: bgColor,
-    };
-
-    const w = settings.preset?.w ?? 0;
-    const h = settings.preset?.h ?? 0;
-    if (w <= 0 || h <= 0 || isNaN(w) || isNaN(h)) {
-      alert("Please enter valid width and height dimensions before copying.");
-      return false;
-    }
-
-    try {
-      // 1. Create a promise that does the resizing as PNG directly
-      const pngBlobPromise = resizeImage(
-        activeFile,
-        settings.preset.w,
-        settings.preset.h,
-        settings.mode,
-        settings.bgColor,
-        "image/png", // Always copy as PNG
-        1.0, // Max quality for clipboard
-        activeCropOffset
-      );
-
-      // 2. Instantiate ClipboardItem synchronously inside the click handler context
-      const clipboardItem = new ClipboardItem({
-        "image/png": pngBlobPromise,
-      });
-
-      // 3. Write synchronously to clipboard
-      await navigator.clipboard.write([clipboardItem]);
-      return true;
-    } catch (error) {
-      console.error("Clipboard copy failed:", error);
-      alert("Failed to copy image. Please make sure the page is active/focused and has clipboard permissions.");
-      return false;
-    }
+  // ── Inline dimension change from CanvasPreview ─────────────
+  const handleInlineDimensionChange = (w: number, h: number) => {
+    const newPreset = { name: "User-defined", w, h };
+    setSelectedPreset(newPreset);
+    setFileSettings((prev) => ({
+      ...prev,
+      [activeFileIndex]: {
+        ...prev[activeFileIndex],
+        preset: newPreset,
+      },
+    }));
+    setCropOffsets({});
   };
 
   return (
-    <div className={`${files.length === 0 ? 'h-[100dvh] overflow-hidden' : 'min-h-[100dvh] overflow-x-hidden'} flex flex-col relative bg-[#0D0D0D]`}>
+    <div
+      className={`${files.length === 0 ? "h-[100dvh] overflow-hidden" : "min-h-[100dvh] overflow-x-hidden"} flex flex-col relative bg-[#0D0D0D]`}>
       {/* Background glow effects */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px] pointer-events-none z-0" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-accent/10 blur-[120px] pointer-events-none z-0" />
@@ -439,11 +449,12 @@ export default function Home(): JSX.Element {
       <Header />
 
       {/* Main Container */}
-      <main className={`w-full flex-1 flex flex-col relative z-10 ${
-        files.length > 0 
-          ? "max-w-[1400px] xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 lg:py-12" 
-          : "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6"
-      }`}>
+      <main
+        className={`w-full flex-1 flex flex-col relative z-10 ${
+          files.length > 0
+            ? "max-w-[1400px] xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 lg:py-12"
+            : "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6"
+        }`}>
         {files.length === 0 ? (
           /* Landing page when no files uploaded */
           <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center w-full">
@@ -457,14 +468,14 @@ export default function Home(): JSX.Element {
               {/* Title */}
               <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight">
                 SOCIAL MEDIA <br />
-                <span className="text-brand-gradient">
-                  IMAGE RESIZER
-                </span>
+                <span className="text-brand-gradient">IMAGE RESIZER</span>
               </h1>
 
               {/* Subtext */}
               <p className="text-neutral-400 text-base md:text-lg max-w-xl leading-relaxed">
-                Resize your photos instantly for Instagram, LinkedIn, Facebook, YouTube, Twitter, and WhatsApp. 100% client-side, secure, and private.
+                Resize your photos instantly for Instagram, LinkedIn, Facebook,
+                YouTube, Twitter, and WhatsApp. 100% client-side, secure, and
+                private.
               </p>
             </div>
 
@@ -475,21 +486,19 @@ export default function Home(): JSX.Element {
           </div>
         ) : (
           /* Editor Dashboard */
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 15 }}
             animate={{ opacity: 1, y: 0 }}
             transition={{ duration: 0.5, ease: "easeOut" }}
-            className="flex flex-col lg:grid lg:grid-cols-12 gap-0 lg:gap-12 items-stretch lg:items-start w-full py-0 lg:py-4"
-          >
+            className="flex flex-col md:grid md:grid-cols-12 gap-0 md:gap-8 lg:gap-12 items-stretch md:items-start w-full py-0 md:py-4">
             {/* Top Preview Column (Right Column on desktop) */}
-            <div className="sticky top-16 lg:sticky lg:top-24 order-1 lg:order-2 lg:col-span-6 xl:col-span-7 flex flex-col bg-[#0D0D0D] border-b lg:border-none border-neutral-900 p-4 lg:p-0 flex-shrink-0 z-30 shadow-md lg:shadow-none">
+            <div className="md:sticky md:top-24 order-1 md:order-2 md:col-span-6 xl:col-span-7 flex flex-col bg-[#0D0D0D] md:bg-transparent border-b md:border-none border-neutral-900 p-4 md:p-0 flex-shrink-0 z-10 shadow-md md:shadow-none">
               {/* Mobile/Tablet Upload New Button (Above Preview) */}
-              <div className="flex items-center justify-between mb-3 lg:hidden px-1">
-                 <button
+              <div className="flex items-center justify-between mb-3 md:hidden px-1">
+                <button
                   type="button"
                   onClick={handleReset}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all text-xs font-semibold border border-neutral-800"
-                >
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all text-xs font-semibold border border-neutral-800">
                   <span>←</span>
                   <span>Upload New Images</span>
                 </button>
@@ -502,8 +511,8 @@ export default function Home(): JSX.Element {
 
               {/* Canvas Live Preview */}
               {activeFile && selectedPreset && (
-                <div className="lg:glass-card lg:p-6 lg:border-neutral-800 space-y-3 lg:space-y-4">
-                  <h3 className="hidden lg:block text-sm font-semibold uppercase tracking-wider text-neutral-400 text-center">
+                <div className="md:glass-card md:p-5 lg:p-6 md:border-neutral-800 space-y-3 md:space-y-4">
+                  <h3 className="hidden md:block text-sm font-semibold uppercase tracking-wider text-neutral-400 text-center">
                     Live Preview
                   </h3>
                   <CanvasPreview
@@ -516,6 +525,7 @@ export default function Home(): JSX.Element {
                     onCropOffsetChange={handleCropOffsetChange}
                     selectedCategory={selectedCategory}
                     onPresetSelect={handlePresetSelect}
+                    onCustomDimensionChange={handleInlineDimensionChange}
                     resizedSize={resizedSize}
                     format={format}
                     isCalculatingSize={isCalculatingSize}
@@ -525,7 +535,7 @@ export default function Home(): JSX.Element {
 
               {/* Batch image thumbnails navigation */}
               {files.length > 1 && (
-                <div className="lg:glass-card lg:p-4 lg:border-neutral-800 p-2 border-t lg:border-t-0 border-neutral-900 mt-2">
+                <div className="md:glass-card md:p-4 md:border-neutral-800 p-2 border-t md:border-t-0 border-neutral-900 mt-2">
                   <span className="hidden lg:block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">
                     Select Preview Image
                   </span>
@@ -545,13 +555,16 @@ export default function Home(): JSX.Element {
                             isActive
                               ? "border-primary ring-2 ring-primary/40 scale-105"
                               : "border-neutral-800 hover:border-neutral-600 hover:scale-102"
-                          }`}
-                        >
+                          }`}>
                           {isActive && (
-                            <motion.div 
+                            <motion.div
                               layoutId="activeThumbRing"
                               className="absolute inset-0 border-2 border-primary rounded-xl pointer-events-none z-10"
-                              transition={{ type: "spring", stiffness: 300, damping: 30 }}
+                              transition={{
+                                type: "spring",
+                                stiffness: 300,
+                                damping: 30,
+                              }}
                             />
                           )}
                           <img
@@ -569,14 +582,13 @@ export default function Home(): JSX.Element {
             </div>
 
             {/* Bottom Controls Column (Left Column on desktop) */}
-            <div className="order-2 lg:order-1 lg:col-span-6 xl:col-span-5 flex-1 p-4 sm:p-6 lg:p-0 space-y-6 bg-[#090909] lg:bg-transparent">
+            <div className="order-2 md:order-1 md:col-span-6 xl:col-span-5 flex-1 p-4 sm:p-6 md:p-0 space-y-6 bg-[#090909] md:bg-transparent">
               {/* Reset/Upload New button (Desktop Only) */}
-              <div className="hidden lg:flex items-center justify-between">
+              <div className="hidden md:flex items-center justify-between">
                 <button
                   type="button"
                   onClick={handleReset}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all text-xs font-semibold border border-neutral-800"
-                >
+                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all text-xs font-semibold border border-neutral-800">
                   <span>←</span>
                   <span>Upload New Images</span>
                 </button>
@@ -605,7 +617,6 @@ export default function Home(): JSX.Element {
               {/* Download Panel */}
               <DownloadPanel
                 onDownload={handleDownload}
-                onCopy={handleCopy}
                 isBatch={files.length > 1}
                 isLoading={isProcessing}
                 format={format}
@@ -615,7 +626,7 @@ export default function Home(): JSX.Element {
               />
 
               {/* Mobile Footer (shown inside scroll container) */}
-              <div className="block lg:hidden pt-8 border-t border-neutral-900">
+              <div className="block md:hidden pt-8 border-t border-neutral-900">
                 <Footer />
               </div>
             </div>
@@ -623,8 +634,8 @@ export default function Home(): JSX.Element {
         )}
       </main>
 
-      {/* Desktop Footer (shown at page bottom) */}
-      <div className="hidden lg:block">
+      {/* Footer (shown at page bottom on tablet+) */}
+      <div className="hidden md:block">
         <Footer />
       </div>
     </div>
