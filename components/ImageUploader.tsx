@@ -118,10 +118,10 @@ export default function ImageUploader({
           </div>
 
           <div className="space-y-1.5">
-            <h2 className="text-lg md:text-xl font-semibold text-white">
+            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-white">
               Drag and drop your image(s)
             </h2>
-            <p className="text-neutral-400 text-sm">
+            <p className="text-neutral-400 text-sm sm:text-base">
               or click to browse from device (Multiple allowed)
             </p>
           </div>
@@ -129,10 +129,10 @@ export default function ImageUploader({
           <div className="flex items-center justify-center mt-2">
             <button 
               type="button"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-dark active:scale-95 text-white font-semibold text-sm rounded-xl transition-all shadow-md shadow-primary/10 border border-primary/20"
+              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-dark active:scale-95 text-white font-semibold text-sm sm:text-base rounded-xl transition-all shadow-md shadow-primary/10 border border-primary/20"
             >
               <svg
-                className="w-4 h-4"
+                className="w-4 h-4 sm:w-5 sm:h-5"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -149,7 +149,7 @@ export default function ImageUploader({
             </button>
           </div>
 
-          <p className="text-xs text-neutral-550 mt-1">
+          <p className="text-xs sm:text-sm text-neutral-550 mt-1">
             Supports PNG, JPG, WEBP
           </p>
         </div>

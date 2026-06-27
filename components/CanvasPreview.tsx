@@ -233,7 +233,7 @@ export default function CanvasPreview({
             onClick={() => setShowOriginal(v => !v)}
             whileHover={{ scale: 1.04 }}
             whileTap={{ scale: 0.96 }}
-            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-semibold transition-all duration-300 select-none ${
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] sm:text-xs font-semibold transition-all duration-300 select-none ${
               showOriginal
                 ? "bg-neutral-800 border-neutral-700 text-neutral-200"
                 : "bg-neutral-900/80 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:text-neutral-300"
@@ -242,7 +242,7 @@ export default function CanvasPreview({
             <motion.span
               animate={{ rotate: showOriginal ? 0 : 180 }}
               transition={{ type: "spring", stiffness: 260, damping: 22 }}
-              className="inline-block text-[11px]"
+              className="inline-block text-[11px] sm:text-xs"
             >
               ←
             </motion.span>
@@ -250,7 +250,7 @@ export default function CanvasPreview({
           </motion.button>
 
           {/* Right: Resized dimensions badge */}
-          <span className={`text-[10px] font-mono px-2.5 py-1 rounded-lg border transition-all duration-300 ${
+          <span className={`text-[10px] sm:text-xs font-mono px-2.5 py-1 rounded-lg border transition-all duration-300 ${
             isTransitioning
               ? "text-[#8B5CF6] bg-[#8B5CF6]/10 border-[#8B5CF6]/30"
               : "text-[#8B5CF6]/80 bg-neutral-900 border-neutral-800"
@@ -277,11 +277,11 @@ export default function CanvasPreview({
               >
                 {/* Original label row */}
                 <div className="flex items-center justify-between px-0.5">
-                  <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 flex items-center gap-1.5">
+                  <span className="text-[10px] sm:text-xs font-bold uppercase tracking-widest text-neutral-500 flex items-center gap-1.5">
                     <span className="w-1.5 h-1.5 rounded-full bg-neutral-700 inline-block" />
                     Original
                   </span>
-                  <span className="text-[10px] font-mono text-neutral-500 bg-neutral-900/80 border border-neutral-800 px-2 py-0.5 rounded-lg">
+                  <span className="text-[10px] sm:text-xs font-mono text-neutral-500 bg-neutral-900/80 border border-neutral-800 px-2 py-0.5 rounded-lg">
                     {imageMeta ? `${imageMeta.width}×${imageMeta.height}` : "—"}
                   </span>
                 </div>
@@ -314,7 +314,7 @@ export default function CanvasPreview({
           >
             {/* Resized label row */}
             <div className="flex items-center justify-between px-0.5">
-              <span className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 transition-colors duration-300 ${
+              <span className={`text-[10px] sm:text-xs font-bold uppercase tracking-widest flex items-center gap-1.5 transition-colors duration-300 ${
                 isTransitioning ? "text-[#8B5CF6]" : "text-[#8B5CF6]/80"
               }`}>
                 <span className={`w-1.5 h-1.5 rounded-full inline-block transition-colors duration-300 ${
@@ -322,7 +322,7 @@ export default function CanvasPreview({
                 }`} />
                 Resized
               </span>
-              <span className="text-[10px] font-mono text-neutral-600 select-none">
+              <span className="text-[10px] sm:text-xs font-mono text-neutral-600 select-none">
                 {mode === "fit" ? "Letterbox" : mode === "fill" ? "Center-crop" : "Stretch"}
               </span>
             </div>

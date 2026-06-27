@@ -28,7 +28,7 @@ export default function ResizeModeSelector({
   return (
     <div className="space-y-4">
       <div>
-        <h3 className="text-sm font-semibold uppercase tracking-wider text-neutral-400 mb-3">
+        <h3 className="text-sm md:text-base font-semibold uppercase tracking-wider text-neutral-400 mb-3">
           3. Resize Mode
         </h3>
         <div className="grid grid-cols-3 gap-3">
@@ -52,8 +52,8 @@ export default function ResizeModeSelector({
                     : "border-neutral-800 bg-[#161616]/40 hover:border-neutral-700 text-neutral-400 hover:text-neutral-200"
                 }`}
               >
-                <span className="text-sm font-bold capitalize mb-1">{m}</span>
-                <span className="text-[10px] opacity-75">{description}</span>
+                <span className="text-sm sm:text-base font-bold capitalize mb-1">{m}</span>
+                <span className="text-[10px] sm:text-[11px] md:text-xs opacity-75">{description}</span>
               </motion.button>
             );
           })}
@@ -69,7 +69,7 @@ export default function ResizeModeSelector({
             transition={{ duration: 0.25, ease: "easeInOut" }}
             className="p-4 bg-[#161616]/40 border border-neutral-800 rounded-2xl overflow-hidden space-y-3"
           >
-            <label className="block text-xs font-semibold text-neutral-400 uppercase tracking-wider">
+            <label className="block text-xs sm:text-sm font-semibold text-neutral-400 uppercase tracking-wider">
               Background Color
             </label>
             <div className="flex flex-wrap items-center gap-3">
