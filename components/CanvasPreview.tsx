@@ -209,8 +209,8 @@ export default function CanvasPreview({
   // ── Framer Motion variants ─────────────────────────────────
   /** Original panel slides in from the left */
   const originalPanelVariants = {
-    hidden: { x: "-60%", opacity: 0, width: 0, marginRight: 0 },
-    visible: { x: 0, opacity: 1, width: "auto", marginRight: 0 },
+    hidden: { x: "-60%", opacity: 0, width: "0%", marginRight: 0 },
+    visible: { x: 0, opacity: 1, width: "50%", marginRight: 0 },
   };
   /** W/H edit inputs expand downward from the pill */
   const dimEditVariants = {
@@ -309,7 +309,7 @@ export default function CanvasPreview({
             layout
             transition={{ type: "spring", stiffness: 200, damping: 26 }}
             className={`flex flex-col gap-2 min-w-0 ${
-              showOriginal ? "flex-1" : "max-w-[380px] w-full mx-auto"
+              showOriginal ? "w-1/2" : "max-w-[450px] w-full mx-auto"
             }`}
           >
             {/* Resized label row */}
