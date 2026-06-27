@@ -410,7 +410,7 @@ export default function CanvasPreview({
         <motion.div
           layout
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
-          className={`flex items-center gap-3 px-4 py-2 rounded-2xl border transition-all duration-300 ${
+          className={`flex items-center gap-1.5 lg:gap-3 px-2 lg:px-4 py-1.5 lg:py-2 rounded-2xl border transition-all duration-300 max-w-full ${
             showDimEdit
               ? "bg-[#18181B] border-[#8B5CF6]/50 shadow-[0_0_20px_rgba(139,92,246,0.25)]"
               : "bg-[#161616]/80 border-neutral-800 hover:border-neutral-700 cursor-pointer"
@@ -427,32 +427,36 @@ export default function CanvasPreview({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
-                className="flex items-center gap-3"
+                className="flex items-center gap-1.5 lg:gap-3"
               >
                 {/* Width label & value */}
-                <span className="flex items-center gap-1.5">
-                  <span className="text-neutral-500 text-[11px] font-bold">↔</span>
-                  <span className="text-[10px] text-neutral-450 font-semibold">Width</span>
-                  <span className="font-mono font-bold text-sm text-neutral-250">
+                <span className="flex items-center gap-1 lg:gap-1.5">
+                  <span className="text-neutral-500 text-[10px] lg:text-[11px] font-bold">↔</span>
+                  <span className="text-[10px] text-neutral-450 font-semibold">
+                    W<span className="hidden lg:inline">idth</span>
+                  </span>
+                  <span className="font-mono font-bold text-xs lg:text-sm text-neutral-250">
                     {localW}
                   </span>
-                  <span className="text-neutral-600 text-[10px]">px</span>
+                  <span className="text-neutral-600 text-[9px] lg:text-[10px]">px</span>
                 </span>
 
-                <span className="text-neutral-700 font-bold text-sm">×</span>
+                <span className="text-neutral-700 font-bold text-xs lg:text-sm">×</span>
 
                 {/* Height label & value */}
-                <span className="flex items-center gap-1.5">
-                  <span className="text-neutral-500 text-[11px] font-bold">↕</span>
-                  <span className="text-[10px] text-neutral-450 font-semibold">Height</span>
-                  <span className="font-mono font-bold text-sm text-neutral-250">
+                <span className="flex items-center gap-1 lg:gap-1.5">
+                  <span className="text-neutral-500 text-[10px] lg:text-[11px] font-bold">↕</span>
+                  <span className="text-[10px] text-neutral-450 font-semibold">
+                    H<span className="hidden lg:inline">eight</span>
+                  </span>
+                  <span className="font-mono font-bold text-xs lg:text-sm text-neutral-250">
                     {localH}
                   </span>
-                  <span className="text-neutral-600 text-[10px]">px</span>
+                  <span className="text-neutral-600 text-[9px] lg:text-[10px]">px</span>
                 </span>
 
                 {/* Edit icon */}
-                <span className="text-neutral-500 hover:text-neutral-400 text-sm ml-0.5">
+                <span className="text-neutral-500 hover:text-neutral-400 text-xs lg:text-sm ml-0.5">
                   ✎
                 </span>
               </motion.div>
@@ -463,13 +467,15 @@ export default function CanvasPreview({
                 animate={{ opacity: 1, scale: 1 }}
                 exit={{ opacity: 0, scale: 0.95 }}
                 transition={{ duration: 0.15 }}
-                className="flex items-center gap-2"
+                className="flex items-center gap-1.5 lg:gap-2"
                 onClick={(e) => e.stopPropagation()} // Prevent closing when clicking inputs
               >
                 {/* Width input */}
-                <label className="flex items-center gap-1.5 bg-[#111]/60 border border-neutral-800/80 rounded-xl px-2.5 py-1.5 focus-within:border-[#8B5CF6]/50 transition-colors">
-                  <span className="text-neutral-500 text-[11px] font-bold">↔</span>
-                  <span className="text-[10px] text-neutral-400 font-semibold">Width</span>
+                <label className="flex items-center gap-1 bg-[#111]/60 border border-neutral-800/80 rounded-xl px-1.5 lg:px-2.5 py-1 lg:py-1.5 focus-within:border-[#8B5CF6]/50 transition-colors">
+                  <span className="text-neutral-500 text-[10px] lg:text-[11px] font-bold">↔</span>
+                  <span className="text-[10px] text-neutral-450 font-semibold select-none">
+                    W<span className="hidden lg:inline">idth</span>
+                  </span>
                   <input
                     type="number"
                     min="1"
@@ -479,18 +485,20 @@ export default function CanvasPreview({
                     onKeyDown={(e) => {
                       if (e.key === "Enter") setShowDimEdit(false);
                     }}
-                    className="w-14 bg-transparent font-mono font-bold text-sm text-[#8B5CF6] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-11 lg:w-14 bg-transparent font-mono font-bold text-xs lg:text-sm text-[#8B5CF6] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                     autoFocus
                   />
-                  <span className="text-neutral-600 text-[10px]">px</span>
+                  <span className="text-neutral-600 text-[9px] lg:text-[10px] select-none">px</span>
                 </label>
 
-                <span className="text-neutral-700 font-bold text-sm">×</span>
+                <span className="text-neutral-700 font-bold text-xs lg:text-sm">×</span>
 
                 {/* Height input */}
-                <label className="flex items-center gap-1.5 bg-[#111]/60 border border-neutral-800/80 rounded-xl px-2.5 py-1.5 focus-within:border-[#8B5CF6]/50 transition-colors">
-                  <span className="text-neutral-500 text-[11px] font-bold">↕</span>
-                  <span className="text-[10px] text-neutral-400 font-semibold">Height</span>
+                <label className="flex items-center gap-1 bg-[#111]/60 border border-neutral-800/80 rounded-xl px-1.5 lg:px-2.5 py-1 lg:py-1.5 focus-within:border-[#8B5CF6]/50 transition-colors">
+                  <span className="text-neutral-500 text-[10px] lg:text-[11px] font-bold">↕</span>
+                  <span className="text-[10px] text-neutral-450 font-semibold select-none">
+                    H<span className="hidden lg:inline">eight</span>
+                  </span>
                   <input
                     type="number"
                     min="1"
@@ -500,9 +508,9 @@ export default function CanvasPreview({
                     onKeyDown={(e) => {
                       if (e.key === "Enter") setShowDimEdit(false);
                     }}
-                    className="w-14 bg-transparent font-mono font-bold text-sm text-[#8B5CF6] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                    className="w-11 lg:w-14 bg-transparent font-mono font-bold text-xs lg:text-sm text-[#8B5CF6] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
                   />
-                  <span className="text-neutral-600 text-[10px]">px</span>
+                  <span className="text-neutral-600 text-[9px] lg:text-[10px] select-none">px</span>
                 </label>
 
                 {/* Confirm/Save button */}
@@ -510,7 +518,7 @@ export default function CanvasPreview({
                   onClick={() => setShowDimEdit(false)}
                   whileHover={{ scale: 1.05 }}
                   whileTap={{ scale: 0.95 }}
-                  className="w-7 h-7 rounded-xl bg-neutral-800 border border-neutral-700 hover:border-[#8B5CF6]/40 hover:bg-[#1f1f2e] flex items-center justify-center text-neutral-300 hover:text-[#8B5CF6] transition-colors"
+                  className="w-6 h-6 lg:w-7 lg:h-7 rounded-lg lg:rounded-xl bg-neutral-800 border border-neutral-700 hover:border-[#8B5CF6]/40 hover:bg-[#1f1f2e] flex items-center justify-center text-neutral-300 hover:text-[#8B5CF6] transition-colors"
                 >
                   ✓
                 </motion.button>
