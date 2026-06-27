@@ -33,19 +33,26 @@ export default function CanvasPreview({
   format,
   isCalculatingSize = false,
 }: CanvasPreviewProps): JSX.Element {
-  const canvasRef = useRef<HTMLCanvasElement>(null);       // Desktop visible canvas
-  const mobileCanvasRef = useRef<HTMLCanvasElement>(null); // Mobile visible canvas (synced)
+  const canvasRef = useRef<HTMLCanvasElement>(null);       // Desktop resized canvas
+  const mobileCanvasRef = useRef<HTMLCanvasElement>(null); // Mobile canvas (synced)
   const isDragging = useRef<boolean>(false);
   const dragStart = useRef<{ x: number; y: number; offsetX: number; offsetY: number }>({
     x: 0, y: 0, offsetX: 0, offsetY: 0,
   });
 
+  // ── Core state ───────────────────────────────────────────
   const [imageMeta, setImageMeta] = useState<{ width: number; height: number } | null>(null);
-  const [originalUrl, setOriginalUrl] = useState<string>(""); // Stable URL for <img> preview
+  const [originalUrl, setOriginalUrl] = useState<string>("");
   const [isHovered, setIsHovered] = useState<boolean>(false);
   const [activeDrag, setActiveDrag] = useState<boolean>(false);
   const [isTransitioning, setIsTransitioning] = useState<boolean>(false);
   const [animatedSize, setAnimatedSize] = useState<number | null>(null);
+
+  // ── UI toggle state ──────────────────────────────────────
+  /** Desktop: show original panel side-by-side (default OFF) */
+  const [showOriginal, setShowOriginal] = useState<boolean>(false);
+  /** Inline W/H editor: collapsed by default */
+  const [showDimEdit, setShowDimEdit] = useState<boolean>(false);
 
   // ── Inline dimension inputs ──────────────────────────────
   const [localW, setLocalW] = useState<string>(targetW.toString());
@@ -72,7 +79,7 @@ export default function CanvasPreview({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [localW, localH]);
 
-  // ── Animated size counter ───────────────────────────────
+  // ── Animated size counter ────────────────────────────────
   useEffect(() => {
     if (resizedSize === null) { setAnimatedSize(null); return; }
     if (animatedSize === null) { setAnimatedSize(resizedSize); return; }
@@ -92,14 +99,14 @@ export default function CanvasPreview({
   // eslint-disable-next-line react-hooks/exhaustive-deps
   }, [resizedSize]);
 
-  // ── Transition flash ───────────────────────────────────
+  // ── Transition flash ─────────────────────────────────────
   useEffect(() => {
     setIsTransitioning(true);
     const t = setTimeout(() => setIsTransitioning(false), 400);
     return () => clearTimeout(t);
   }, [targetW, targetH, mode, file]);
 
-  // ── Image metadata + stable original URL ──────────────
+  // ── Image metadata + stable original URL ─────────────────
   useEffect(() => {
     const img = new Image();
     const url = URL.createObjectURL(file);
@@ -112,7 +119,7 @@ export default function CanvasPreview({
     };
   }, [file]);
 
-  // ── Draw resized canvas + sync to mobile canvas ────────
+  // ── Draw resized canvas + sync to mobile ─────────────────
   useEffect(() => {
     const canvas = canvasRef.current;
     if (!canvas) return;
@@ -153,9 +160,7 @@ export default function CanvasPreview({
     img.src = url;
   }, [file, targetW, targetH, mode, bgColor, cropOffset, format]);
 
-
-
-  // ── Crop drag ──────────────────────────────────────────
+  // ── Crop drag ─────────────────────────────────────────────
   const handleStart = (clientX: number, clientY: number) => {
     if (mode !== "fill" || !imageMeta) return;
     isDragging.current = true;
@@ -164,7 +169,6 @@ export default function CanvasPreview({
   };
   const handleMove = (clientX: number, clientY: number) => {
     if (!isDragging.current || !imageMeta) return;
-    // Use whichever canvas is visible (mobile or desktop)
     const canvas = (mobileCanvasRef.current?.clientWidth ?? 0) > 0
       ? mobileCanvasRef.current!
       : canvasRef.current;
@@ -181,136 +185,207 @@ export default function CanvasPreview({
       y: Math.max(-maxDevY, Math.min(maxDevY, dragStart.current.offsetY + dy * ratioY)),
     });
   };
-
   const handleEnd = () => { isDragging.current = false; setActiveDrag(false); };
 
-  const wrapperBg: React.CSSProperties = {
-    aspectRatio: `${targetW} / ${targetH}`,
-    touchAction: mode === "fill" ? "none" : "auto",
+  // ── Styles ────────────────────────────────────────────────
+  const checkerStyle: React.CSSProperties = {
     backgroundColor: "#18181B",
     backgroundImage: "linear-gradient(45deg,#27272A 25%,transparent 25%),linear-gradient(-45deg,#27272A 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#27272A 75%),linear-gradient(-45deg,transparent 75%,#27272A 75%)",
     backgroundSize: "16px 16px",
     backgroundPosition: "0 0,0 8px,8px -8px,-8px 0",
   };
-
+  const resizedWrapperStyle: React.CSSProperties = {
+    ...checkerStyle,
+    aspectRatio: `${targetW} / ${targetH}`,
+    touchAction: mode === "fill" ? "none" : "auto",
+  };
   const resizedCanvasStyle: React.CSSProperties = {
     backgroundColor: bgColor === "transparent" ? "transparent" : bgColor,
   };
 
-  // Max heights for mobile/tablet single canvas
-  const maxHClass = "max-h-[220px] min-[375px]:max-h-[260px] min-[410px]:max-h-[300px] sm:max-h-[380px] md:max-h-[440px]";
+  // Mobile canvas max-height
+  const maxHClass = "max-h-[200px] min-[375px]:max-h-[240px] min-[410px]:max-h-[280px] sm:max-h-[340px] md:max-h-[400px]";
+
+  // ── Framer Motion variants ─────────────────────────────────
+  /** Original panel slides in from the left */
+  const originalPanelVariants = {
+    hidden: { x: "-60%", opacity: 0, width: 0, marginRight: 0 },
+    visible: { x: 0, opacity: 1, width: "auto", marginRight: 0 },
+  };
+  /** W/H edit inputs expand downward from the pill */
+  const dimEditVariants = {
+    hidden: { opacity: 0, height: 0, scale: 0.95, y: -6 },
+    visible: { opacity: 1, height: "auto", scale: 1, y: 0 },
+  };
 
   return (
-    <div className="flex flex-col items-center gap-4 w-full">
+    <div className="flex flex-col items-center gap-3 w-full">
 
-      {/* ═══════════════════════════════════════════════════════
-          DESKTOP: Side-by-side Original | Resized (lg+ only)
-          ═══════════════════════════════════════════════════════ */}
-      <div className="hidden lg:grid lg:grid-cols-2 gap-5 w-full">
+      {/* ══════════════════════════════════════════════════════
+          DESKTOP ONLY (lg+): Toggleable Original + Resized
+          ══════════════════════════════════════════════════════ */}
+      <div className="hidden lg:flex flex-col gap-3 w-full">
 
-        {/* ── Original side — natural image dimensions ── */}
-        <div className="flex flex-col gap-2.5">
-          <div className="flex items-center justify-between px-1">
-            <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-400 flex items-center gap-1.5">
-              <span className="w-1.5 h-1.5 rounded-full bg-neutral-600 inline-block" />
-              Original
-            </span>
-            <span className="text-[10px] font-mono text-neutral-500 bg-neutral-900 border border-neutral-800 px-2 py-0.5 rounded-lg">
-              {imageMeta ? `${imageMeta.width}×${imageMeta.height}` : "—"}
-            </span>
-          </div>
-          {/* img tag → shows actual upload aspect ratio, not forced into target dimensions */}
-          <div className="relative border border-neutral-800/70 rounded-2xl overflow-hidden shadow-lg bg-[#18181B]"
-            style={{
-              backgroundImage: "linear-gradient(45deg,#27272A 25%,transparent 25%),linear-gradient(-45deg,#27272A 25%,transparent 25%),linear-gradient(45deg,transparent 75%,#27272A 75%),linear-gradient(-45deg,transparent 75%,#27272A 75%)",
-              backgroundSize: "16px 16px",
-              backgroundPosition: "0 0,0 8px,8px -8px,-8px 0",
-            }}
+        {/* ── Section header with compare toggle ── */}
+        <div className="flex items-center justify-between px-1">
+          {/* Left: ← Compare toggle button */}
+          <motion.button
+            onClick={() => setShowOriginal(v => !v)}
+            whileHover={{ scale: 1.04 }}
+            whileTap={{ scale: 0.96 }}
+            className={`flex items-center gap-1.5 px-3 py-1.5 rounded-xl border text-[10px] font-semibold transition-all duration-300 select-none ${
+              showOriginal
+                ? "bg-neutral-800 border-neutral-700 text-neutral-200"
+                : "bg-neutral-900/80 border-neutral-800 text-neutral-400 hover:border-neutral-700 hover:text-neutral-300"
+            }`}
           >
-            {originalUrl && (
-              <img
-                src={originalUrl}
-                alt="Original uploaded image"
-                className="w-full h-auto block"
-                draggable={false}
-              />
-            )}
-          </div>
+            <motion.span
+              animate={{ rotate: showOriginal ? 0 : 180 }}
+              transition={{ type: "spring", stiffness: 260, damping: 22 }}
+              className="inline-block text-[11px]"
+            >
+              ←
+            </motion.span>
+            <span>{showOriginal ? "Hide Original" : "Compare Original"}</span>
+          </motion.button>
+
+          {/* Right: Resized dimensions badge */}
+          <span className={`text-[10px] font-mono px-2.5 py-1 rounded-lg border transition-all duration-300 ${
+            isTransitioning
+              ? "text-[#8B5CF6] bg-[#8B5CF6]/10 border-[#8B5CF6]/30"
+              : "text-[#8B5CF6]/80 bg-neutral-900 border-neutral-800"
+          }`}>
+            ↔ {targetW}px  ↕ {targetH}px
+          </span>
         </div>
 
-        {/* ── Resized side ── */}
-        <div className="flex flex-col gap-2.5">
-          <div className="flex items-center justify-between px-1">
-            <span className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 transition-colors ${isTransitioning ? "text-primary-light" : "text-primary-light/80"}`}>
-              <span className={`w-1.5 h-1.5 rounded-full inline-block transition-colors ${isTransitioning ? "bg-primary animate-pulse" : "bg-primary"}`} />
-              Resized
-            </span>
-            <span className={`text-[10px] font-mono px-2 py-0.5 rounded-lg border transition-all duration-300 ${isTransitioning ? "text-primary-light bg-primary/10 border-primary/30" : "text-primary-light/80 bg-neutral-900 border-neutral-800"}`}>
-              {targetW}×{targetH}
-            </span>
-          </div>
+        {/* ── Preview panels ── */}
+        <div className="flex gap-4 w-full overflow-hidden">
+
+          {/* Original panel — slides in from left */}
+          <AnimatePresence>
+            {showOriginal && (
+              <motion.div
+                key="original-panel"
+                variants={originalPanelVariants}
+                initial="hidden"
+                animate="visible"
+                exit="hidden"
+                transition={{ type: "spring", stiffness: 220, damping: 26, mass: 0.9 }}
+                className="flex flex-col gap-2 flex-shrink-0 overflow-hidden"
+                style={{ width: "50%" }}
+              >
+                {/* Original label row */}
+                <div className="flex items-center justify-between px-0.5">
+                  <span className="text-[10px] font-bold uppercase tracking-widest text-neutral-500 flex items-center gap-1.5">
+                    <span className="w-1.5 h-1.5 rounded-full bg-neutral-700 inline-block" />
+                    Original
+                  </span>
+                  <span className="text-[10px] font-mono text-neutral-500 bg-neutral-900/80 border border-neutral-800 px-2 py-0.5 rounded-lg">
+                    {imageMeta ? `${imageMeta.width}×${imageMeta.height}` : "—"}
+                  </span>
+                </div>
+
+                {/* Original image — natural aspect ratio */}
+                <div
+                  className="relative border border-neutral-800/60 rounded-2xl overflow-hidden shadow-lg"
+                  style={checkerStyle}
+                >
+                  {originalUrl && (
+                    <img
+                      src={originalUrl}
+                      alt="Original uploaded image"
+                      className="w-full h-auto block"
+                      draggable={false}
+                    />
+                  )}
+                </div>
+              </motion.div>
+            )}
+          </AnimatePresence>
+
+          {/* Resized panel — always visible, expands to fill when original hidden */}
           <motion.div
             layout
-            transition={{ type: "spring", stiffness: 180, damping: 24 }}
-            className={`relative border rounded-2xl overflow-hidden shadow-lg transition-all duration-300 ${
-              isTransitioning
-                ? "border-primary/60 ring-2 ring-primary/20 shadow-primary/10"
-                : "border-primary/20"
-            }`}
-            onMouseEnter={() => setIsHovered(true)}
-            onMouseLeave={() => { setIsHovered(false); handleEnd(); }}
-            style={wrapperBg}
+            transition={{ type: "spring", stiffness: 200, damping: 26 }}
+            className="flex flex-col gap-2 flex-1 min-w-0"
           >
-            {/* Fill-mode hint */}
-            {mode === "fill" && isHovered && !activeDrag && (
-              <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 px-3 py-1.5 rounded-full bg-black/85 backdrop-blur-md border border-neutral-800 text-[10px] font-semibold text-neutral-300 pointer-events-none select-none flex items-center gap-1.5 whitespace-nowrap">
-                <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 013 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1" />
-                </svg>
-                Drag to adjust crop
-              </div>
-            )}
-            <canvas
-              ref={canvasRef}
-              onMouseDown={(e) => handleStart(e.clientX, e.clientY)}
-              onMouseMove={(e) => handleMove(e.clientX, e.clientY)}
-              onMouseUp={handleEnd}
-              onTouchStart={(e) => { if (e.touches[0]) handleStart(e.touches[0].clientX, e.touches[0].clientY); }}
-              onTouchMove={(e) => { if (e.touches[0]) handleMove(e.touches[0].clientX, e.touches[0].clientY); }}
-              onTouchEnd={handleEnd}
-              className={`w-full h-auto block select-none transition-all duration-300 ease-in-out ${
-                isTransitioning ? "opacity-75 blur-[1.5px]" : "opacity-100"
-              } ${mode === "fill" ? (activeDrag ? "cursor-grabbing" : "cursor-grab") : "cursor-default"}`}
-              style={{ aspectRatio: `${targetW}/${targetH}`, ...resizedCanvasStyle }}
-            />
+            {/* Resized label row */}
+            <div className="flex items-center justify-between px-0.5">
+              <span className={`text-[10px] font-bold uppercase tracking-widest flex items-center gap-1.5 transition-colors ${
+                isTransitioning ? "text-[#8B5CF6]" : "text-[#8B5CF6]/80"
+              }`}>
+                <span className={`w-1.5 h-1.5 rounded-full inline-block ${
+                  isTransitioning ? "bg-[#8B5CF6] animate-pulse" : "bg-[#8B5CF6]"
+                }`} />
+                Resized
+              </span>
+              <span className="text-[10px] font-mono text-neutral-600 select-none">
+                {mode === "fit" ? "Letterbox" : mode === "fill" ? "Center-crop" : "Stretch"}
+              </span>
+            </div>
+
+            {/* Resized canvas */}
+            <motion.div
+              layout
+              className={`relative border rounded-2xl overflow-hidden shadow-lg transition-all duration-300 ${
+                isTransitioning
+                  ? "border-[#8B5CF6]/60 ring-2 ring-[#8B5CF6]/20"
+                  : "border-[#8B5CF6]/20"
+              }`}
+              style={resizedWrapperStyle}
+              onMouseEnter={() => setIsHovered(true)}
+              onMouseLeave={() => { setIsHovered(false); handleEnd(); }}
+            >
+              {/* Drag-to-crop tooltip */}
+              {mode === "fill" && isHovered && !activeDrag && (
+                <div className="absolute top-3 left-1/2 -translate-x-1/2 z-20 px-3 py-1.5 rounded-full bg-black/85 backdrop-blur-md border border-neutral-800 text-[10px] font-semibold text-neutral-300 pointer-events-none select-none flex items-center gap-1.5 whitespace-nowrap">
+                  <svg className="w-3 h-3" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 013 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1" />
+                  </svg>
+                  Drag to adjust crop
+                </div>
+              )}
+              <canvas
+                ref={canvasRef}
+                onMouseDown={(e) => handleStart(e.clientX, e.clientY)}
+                onMouseMove={(e) => handleMove(e.clientX, e.clientY)}
+                onMouseUp={handleEnd}
+                onTouchStart={(e) => { if (e.touches[0]) handleStart(e.touches[0].clientX, e.touches[0].clientY); }}
+                onTouchMove={(e) => { if (e.touches[0]) handleMove(e.touches[0].clientX, e.touches[0].clientY); }}
+                onTouchEnd={handleEnd}
+                className={`w-full h-auto block select-none transition-all duration-300 ${
+                  isTransitioning ? "opacity-75 blur-[1.5px]" : "opacity-100"
+                } ${mode === "fill" ? (activeDrag ? "cursor-grabbing" : "cursor-grab") : "cursor-default"}`}
+                style={{ aspectRatio: `${targetW}/${targetH}`, ...resizedCanvasStyle }}
+              />
+            </motion.div>
           </motion.div>
         </div>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════
-          MOBILE / TABLET: Single resized canvas (below lg)
-          ═══════════════════════════════════════════════════════ */}
+      {/* ══════════════════════════════════════════════════════
+          MOBILE / TABLET (below lg): Single resized canvas
+          ══════════════════════════════════════════════════════ */}
       <motion.div
         layout
         transition={{ type: "spring", stiffness: 180, damping: 24 }}
         className={`lg:hidden relative inline-flex items-center justify-center border bg-[#121212] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl mx-auto max-w-full ${maxHClass} ${
           isTransitioning
-            ? "border-primary/60 shadow-primary/20 ring-4 ring-primary/20 scale-[0.98]"
+            ? "border-[#8B5CF6]/60 shadow-[#8B5CF6]/20 ring-4 ring-[#8B5CF6]/20 scale-[0.98]"
             : "border-neutral-800/80 shadow-black/40"
         }`}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => { setIsHovered(false); handleEnd(); }}
       >
-        {/* Fill-mode hint */}
         {mode === "fill" && isHovered && !activeDrag && (
           <div className="absolute top-4 z-20 px-3 py-1.5 rounded-full bg-black/80 backdrop-blur-md border border-neutral-800 text-[10px] font-semibold text-neutral-300 pointer-events-none select-none flex items-center gap-1.5">
             <svg className="w-3.5 h-3.5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
               <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M7 11.5V14m0-2.5v-6a1.5 1.5 0 113 0m-3 6a1.5 1.5 0 00-3 0v2a7.5 7.5 0 0015 0v-5a1.5 1.5 0 013 0m-6-3V11m0-5.5v-1a1.5 1.5 0 013 0v1" />
             </svg>
-            Drag image to adjust crop
+            Drag to adjust crop
           </div>
         )}
-        {/* Mobile uses mobileCanvasRef — synced from canvasRef after each draw */}
         <canvas
           ref={mobileCanvasRef}
           onMouseDown={(e) => handleStart(e.clientX, e.clientY)}
@@ -319,52 +394,127 @@ export default function CanvasPreview({
           onTouchStart={(e) => { if (e.touches[0]) handleStart(e.touches[0].clientX, e.touches[0].clientY); }}
           onTouchMove={(e) => { if (e.touches[0]) handleMove(e.touches[0].clientX, e.touches[0].clientY); }}
           onTouchEnd={handleEnd}
-          className={`max-w-full ${maxHClass} w-auto h-auto select-none transition-all duration-300 ease-in-out ${
+          className={`max-w-full ${maxHClass} w-auto h-auto select-none transition-all duration-300 ${
             isTransitioning ? "opacity-75 blur-[2px] scale-[0.98]" : "opacity-100 blur-0 scale-100"
           } ${mode === "fill" ? (activeDrag ? "cursor-grabbing" : "cursor-grab") : "cursor-default"}`}
-          style={{ ...wrapperBg, ...resizedCanvasStyle }}
+          style={{ ...resizedWrapperStyle, ...resizedCanvasStyle }}
         />
       </motion.div>
 
+      {/* ══════════════════════════════════════════════════════
+          Dimension display pill + collapsible editor
+          ══════════════════════════════════════════════════════ */}
+      <div className="flex flex-col items-center gap-2 w-full mt-0.5">
 
-      {/* ═══════════════════════════════════════════════════════
-          Inline Dimension Inputs  (always visible)
-          ═══════════════════════════════════════════════════════ */}
-      <div className="flex items-center justify-center gap-2 mt-1">
-        {/* Width input */}
-        <label className={`flex items-center gap-1.5 bg-[#161616]/90 border rounded-xl px-3 py-2 transition-all duration-300 focus-within:border-primary/60 focus-within:bg-[#1a1a1a] ${isTransitioning ? "border-primary/30" : "border-neutral-800"}`}>
-          <span className="text-neutral-500 text-[10px] font-bold select-none">W</span>
-          <input
-            type="number"
-            min="1"
-            max="10000"
-            value={localW}
-            onChange={(e) => setLocalW(e.target.value)}
-            className="w-14 bg-transparent font-mono font-bold text-sm text-accent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
-          <span className="text-neutral-600 text-[10px] select-none">px</span>
-        </label>
+        {/* Pill: shows current dims, click to expand editor */}
+        <motion.button
+          onClick={() => setShowDimEdit(v => !v)}
+          whileHover={{ scale: 1.03 }}
+          whileTap={{ scale: 0.97 }}
+          className={`flex items-center gap-3 px-4 py-2.5 rounded-2xl border transition-all duration-300 select-none group ${
+            showDimEdit
+              ? "bg-[#1a1a1a] border-[#8B5CF6]/40 shadow-[0_0_16px_#8B5CF640]"
+              : "bg-[#161616]/80 border-neutral-800 hover:border-neutral-700"
+          }`}
+        >
+          {/* Width display */}
+          <span className="flex items-center gap-1.5">
+            {/* ↔ horizontal arrows */}
+            <span className="text-neutral-500 text-[10px] font-bold">↔</span>
+            <span className="text-[10px] text-neutral-400 font-semibold">Width</span>
+            <span className={`font-mono font-bold text-sm transition-colors ${showDimEdit ? "text-[#8B5CF6]" : "text-neutral-200"}`}>
+              {localW}
+            </span>
+            <span className="text-neutral-600 text-[10px]">px</span>
+          </span>
 
-        <span className="text-neutral-700 text-sm font-bold select-none">×</span>
+          <span className="text-neutral-700 font-bold text-sm">×</span>
 
-        {/* Height input */}
-        <label className={`flex items-center gap-1.5 bg-[#161616]/90 border rounded-xl px-3 py-2 transition-all duration-300 focus-within:border-primary/60 focus-within:bg-[#1a1a1a] ${isTransitioning ? "border-primary/30" : "border-neutral-800"}`}>
-          <span className="text-neutral-500 text-[10px] font-bold select-none">H</span>
-          <input
-            type="number"
-            min="1"
-            max="10000"
-            value={localH}
-            onChange={(e) => setLocalH(e.target.value)}
-            className="w-14 bg-transparent font-mono font-bold text-sm text-accent focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
-          />
-          <span className="text-neutral-600 text-[10px] select-none">px</span>
-        </label>
+          {/* Height display */}
+          <span className="flex items-center gap-1.5">
+            {/* ↕ vertical arrows */}
+            <span className="text-neutral-500 text-[10px] font-bold">↕</span>
+            <span className="text-[10px] text-neutral-400 font-semibold">Height</span>
+            <span className={`font-mono font-bold text-sm transition-colors ${showDimEdit ? "text-[#8B5CF6]" : "text-neutral-200"}`}>
+              {localH}
+            </span>
+            <span className="text-neutral-600 text-[10px]">px</span>
+          </span>
+
+          {/* Edit icon — rotates when open */}
+          <motion.span
+            animate={{ rotate: showDimEdit ? 45 : 0 }}
+            transition={{ type: "spring", stiffness: 280, damping: 22 }}
+            className="text-neutral-500 group-hover:text-neutral-400 text-sm ml-1 inline-block"
+          >
+            ✎
+          </motion.span>
+        </motion.button>
+
+        {/* Collapsible editor panel — spring expand/collapse */}
+        <AnimatePresence>
+          {showDimEdit && (
+            <motion.div
+              key="dim-editor"
+              variants={dimEditVariants}
+              initial="hidden"
+              animate="visible"
+              exit="hidden"
+              transition={{ type: "spring", stiffness: 280, damping: 24 }}
+              className="overflow-hidden w-full flex justify-center"
+            >
+              <div className="flex items-center gap-2 px-4 py-3 bg-[#161616] border border-[#8B5CF6]/20 rounded-2xl shadow-lg shadow-black/30">
+
+                {/* Width input */}
+                <label className="flex items-center gap-2 bg-[#111]/60 border border-neutral-800 rounded-xl px-3 py-2 transition-all focus-within:border-[#8B5CF6]/50 focus-within:bg-[#18182A]/60">
+                  <span className="text-neutral-500 text-[10px] font-bold select-none">↔</span>
+                  <span className="text-neutral-400 text-[10px] font-semibold select-none">Width</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10000"
+                    value={localW}
+                    onChange={(e) => setLocalW(e.target.value)}
+                    className="w-16 bg-transparent font-mono font-bold text-sm text-[#8B5CF6] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <span className="text-neutral-600 text-[10px] select-none">px</span>
+                </label>
+
+                <span className="text-neutral-700 text-sm font-bold select-none">×</span>
+
+                {/* Height input */}
+                <label className="flex items-center gap-2 bg-[#111]/60 border border-neutral-800 rounded-xl px-3 py-2 transition-all focus-within:border-[#8B5CF6]/50 focus-within:bg-[#18182A]/60">
+                  <span className="text-neutral-500 text-[10px] font-bold select-none">↕</span>
+                  <span className="text-neutral-400 text-[10px] font-semibold select-none">Height</span>
+                  <input
+                    type="number"
+                    min="1"
+                    max="10000"
+                    value={localH}
+                    onChange={(e) => setLocalH(e.target.value)}
+                    className="w-16 bg-transparent font-mono font-bold text-sm text-[#8B5CF6] focus:outline-none [appearance:textfield] [&::-webkit-outer-spin-button]:appearance-none [&::-webkit-inner-spin-button]:appearance-none"
+                  />
+                  <span className="text-neutral-600 text-[10px] select-none">px</span>
+                </label>
+
+                {/* Close editor button */}
+                <motion.button
+                  onClick={() => setShowDimEdit(false)}
+                  whileHover={{ scale: 1.1 }}
+                  whileTap={{ scale: 0.9 }}
+                  className="w-7 h-7 rounded-lg bg-neutral-800 border border-neutral-700 flex items-center justify-center text-neutral-400 hover:text-neutral-200 hover:bg-neutral-700 transition-all text-xs"
+                >
+                  ✕
+                </motion.button>
+              </div>
+            </motion.div>
+          )}
+        </AnimatePresence>
       </div>
 
-      {/* ═══════════════════════════════════════════════════════
+      {/* ══════════════════════════════════════════════════════
           File Size Card
-          ═══════════════════════════════════════════════════════ */}
+          ══════════════════════════════════════════════════════ */}
       <div className="flex items-center justify-between w-full max-w-sm px-5 py-3.5 bg-[#161616]/60 border border-white/5 rounded-2xl shadow-inner select-none">
         <div className="flex flex-col items-start gap-0.5">
           <span className="text-[9px] text-neutral-400 font-semibold uppercase tracking-wider">Original Size</span>
@@ -379,7 +529,7 @@ export default function CanvasPreview({
                 animate={{ opacity: 1, scale: 1, rotate: 0 }}
                 exit={{ opacity: 0, scale: 0.6, rotate: 90 }}
                 transition={{ duration: 0.2 }}
-                className="w-4 h-4 border-2 border-[#00C2A8] border-t-transparent rounded-full animate-spin block"
+                className="w-4 h-4 border-2 border-[#8B5CF6] border-t-transparent rounded-full animate-spin block"
               />
             ) : (
               <motion.span
@@ -396,9 +546,9 @@ export default function CanvasPreview({
           </AnimatePresence>
         </div>
         <div className="flex flex-col items-end gap-0.5">
-          <span className="text-[9px] text-neutral-450 font-semibold uppercase tracking-wider">Resized Size</span>
-          <span className="font-mono text-xs sm:text-sm text-[#00C2A8] font-bold">
-            <span className={`transition-all duration-300 ease-in-out inline-block ${isCalculatingSize ? "opacity-50 scale-95 blur-[0.5px]" : "opacity-100 scale-100 blur-0"}`}>
+          <span className="text-[9px] text-neutral-400 font-semibold uppercase tracking-wider">Resized Size</span>
+          <span className="font-mono text-xs sm:text-sm text-[#8B5CF6] font-bold">
+            <span className={`transition-all duration-300 inline-block ${isCalculatingSize ? "opacity-50 scale-95 blur-[0.5px]" : "opacity-100 scale-100"}`}>
               {animatedSize !== null ? formatFileSize(animatedSize) : "—"}
             </span>
           </span>
