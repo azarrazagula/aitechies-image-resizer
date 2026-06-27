@@ -218,23 +218,32 @@ export default function CanvasPreview({
     visible: { opacity: 1, height: "auto", scale: 1, y: 0 },
   };
 
-  // Calculate relative visual scales for side-by-side comparison
-  let originalScale = 1;
-  let resizedScale = 1;
+  // Calculate relative visual widths for side-by-side comparison
+  let originalWidthStyle: React.CSSProperties = { width: "100%" };
+  let resizedWidthStyle: React.CSSProperties = { width: "100%" };
 
   if (showOriginal && imageMeta && targetW && targetH) {
-    const scaleW = imageMeta.width / targetW;
-    const scaleH = imageMeta.height / targetH;
-    const scale = Math.max(scaleW, scaleH);
+    const origDominant = Math.max(imageMeta.width, imageMeta.height);
+    const destDominant = Math.max(targetW, targetH);
+    const absoluteMax = Math.max(origDominant, destDominant);
 
-    if (scale < 1) {
-      // Original is smaller than Resized
-      originalScale = Math.max(0.45, scale);
-      resizedScale = 1;
-    } else if (scale > 1) {
-      // Original is larger than Resized
-      originalScale = 1;
-      resizedScale = Math.max(0.45, 1 / scale);
+    const baseColumnWidth = 350; // Standard max column width in pixels on desktop
+
+    if (absoluteMax >= baseColumnWidth) {
+      // One of them is larger than the column, so we use percentage scaling
+      if (origDominant >= destDominant) {
+        // Original is larger or equal
+        originalWidthStyle = { width: "100%" };
+        resizedWidthStyle = { width: `${Math.max(35, (destDominant / origDominant) * 100)}%` };
+      } else {
+        // Resized is larger
+        originalWidthStyle = { width: `${Math.max(35, (origDominant / destDominant) * 100)}%` };
+        resizedWidthStyle = { width: "100%" };
+      }
+    } else {
+      // Both are smaller than the column, so we show them at their exact pixel sizes!
+      originalWidthStyle = { width: `${origDominant}px` };
+      resizedWidthStyle = { width: `${destDominant}px` };
     }
   }
 
@@ -311,7 +320,7 @@ export default function CanvasPreview({
                   className="relative border border-neutral-800/60 rounded-2xl overflow-hidden shadow-lg mx-auto"
                   style={{
                     ...checkerStyle,
-                    width: showOriginal ? `${originalScale * 100}%` : "100%"
+                    ...originalWidthStyle
                   }}
                 >
                   {originalUrl && (
@@ -360,7 +369,7 @@ export default function CanvasPreview({
               }`}
               style={{
                 ...resizedWrapperStyle,
-                width: showOriginal ? `${resizedScale * 100}%` : "100%"
+                ...resizedWidthStyle
               }}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => { setIsHovered(false); handleEnd(); }}
