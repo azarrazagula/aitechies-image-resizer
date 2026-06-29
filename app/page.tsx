@@ -440,7 +440,7 @@ export default function Home(): JSX.Element {
 
   return (
     <div
-      className={`${files.length === 0 ? "h-[100dvh] overflow-hidden" : "min-h-[100dvh] overflow-x-hidden"} flex flex-col relative bg-[#0D0D0D]`}>
+      className={`min-h-[100dvh] overflow-x-hidden flex flex-col relative bg-[#0D0D0D]`}>
       {/* Background glow effects */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px] pointer-events-none z-0" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-accent/10 blur-[120px] pointer-events-none z-0" />
@@ -515,21 +515,23 @@ export default function Home(): JSX.Element {
                   <h3 className="hidden md:block text-sm font-semibold uppercase tracking-wider text-neutral-400 text-center">
                     Live Preview
                   </h3>
-                  <CanvasPreview
-                    file={activeFile}
-                    targetW={selectedPreset.w}
-                    targetH={selectedPreset.h}
-                    mode={mode}
-                    bgColor={bgColor}
-                    cropOffset={activeCropOffset}
-                    onCropOffsetChange={handleCropOffsetChange}
-                    selectedCategory={selectedCategory}
-                    onPresetSelect={handlePresetSelect}
-                    onCustomDimensionChange={handleInlineDimensionChange}
-                    resizedSize={resizedSize}
-                    format={format}
-                    isCalculatingSize={isCalculatingSize}
-                  />
+                  <div className="max-h-[220px] min-[375px]:max-h-[260px] min-[410px]:max-h-[300px] sm:max-h-[360px] md:max-h-[420px]">
+                    <CanvasPreview
+                      file={activeFile}
+                      targetW={selectedPreset.w}
+                      targetH={selectedPreset.h}
+                      mode={mode}
+                      bgColor={bgColor}
+                      cropOffset={activeCropOffset}
+                      onCropOffsetChange={handleCropOffsetChange}
+                      selectedCategory={selectedCategory}
+                      onPresetSelect={handlePresetSelect}
+                      onCustomDimensionChange={handleInlineDimensionChange}
+                      resizedSize={resizedSize}
+                      format={format}
+                      isCalculatingSize={isCalculatingSize}
+                    />
+                  </div>
                 </div>
               )}
 
