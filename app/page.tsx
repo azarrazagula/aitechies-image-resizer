@@ -104,7 +104,8 @@ export default function Home(): JSX.Element {
 
     let isCurrent = true;
     // Debounce when user is typing inline custom dimensions (preset name = "User-defined")
-    const isCustomDimension = currentFileSettings.preset.name === "User-defined";
+    const isCustomDimension =
+      currentFileSettings.preset.name === "User-defined";
     const delay = isCustomDimension ? 250 : 0;
 
     const calculateSize = async () => {
@@ -192,7 +193,6 @@ export default function Home(): JSX.Element {
         preset,
       },
     }));
-
   };
 
   const handleModeSelect = (newMode: "fit" | "fill" | "stretch") => {
@@ -480,9 +480,9 @@ export default function Home(): JSX.Element {
 
                 {/* Subtext */}
                 <p className="text-neutral-400 text-base md:text-lg max-w-xl leading-relaxed">
-                  Resize your photos instantly for Instagram, LinkedIn, Facebook,
-                  YouTube, Twitter, and WhatsApp. 100% client-side, secure, and
-                  private.
+                  Resize your photos instantly for Instagram, LinkedIn,
+                  Facebook, YouTube, Twitter, WhatsApp, Android & iOS. 100%
+                  client-side, secure, and private.
                 </p>
               </div>
 
@@ -598,7 +598,7 @@ export default function Home(): JSX.Element {
                   onClick={handleReset}
                   className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all text-xs font-semibold border border-neutral-800">
                   <span>←</span>
-                  <span>Upload New Images</span>
+                  <span>Back</span>
                 </button>
                 {files.length > 1 && (
                   <span className="text-xs font-medium text-neutral-400 bg-neutral-900 border border-neutral-800 px-3 py-1 rounded-xl">
