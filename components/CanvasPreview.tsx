@@ -28,6 +28,7 @@ export default function CanvasPreview({
   bgColor,
   cropOffset,
   onCropOffsetChange,
+  selectedCategory,
   onCustomDimensionChange,
   resizedSize,
   format,
@@ -222,7 +223,13 @@ export default function CanvasPreview({
   let originalWidthStyle: React.CSSProperties = { width: "100%" };
   let resizedWidthStyle: React.CSSProperties = { width: "100%" };
 
-  if (showOriginal && imageMeta && targetW && targetH) {
+  if (selectedCategory === "Android" || selectedCategory === "iOS") {
+    // Show exact pixel sizes for Android & iOS presets to make launcher icons look real
+    resizedWidthStyle = { width: `${targetW}px`, maxWidth: "100%" };
+    if (showOriginal && imageMeta) {
+      originalWidthStyle = { width: "100%" };
+    }
+  } else if (showOriginal && imageMeta && targetW && targetH) {
     const origDominant = Math.max(imageMeta.width, imageMeta.height);
     const destDominant = Math.max(targetW, targetH);
     const absoluteMax = Math.max(origDominant, destDominant);
@@ -416,6 +423,7 @@ export default function CanvasPreview({
           ...checkerStyle,
           touchAction: mode === "fill" ? "none" : "auto",
           aspectRatio: `${targetW} / ${targetH}`,
+          ...resizedWidthStyle,
         }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => {
