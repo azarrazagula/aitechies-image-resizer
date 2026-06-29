@@ -223,13 +223,8 @@ export default function CanvasPreview({
   let originalWidthStyle: React.CSSProperties = { width: "100%" };
   let resizedWidthStyle: React.CSSProperties = { width: "100%" };
 
-  if (selectedCategory === "Android" || selectedCategory === "iOS") {
-    // Show exact pixel sizes for Android & iOS presets to make launcher icons look real
-    resizedWidthStyle = { width: `${targetW}px`, maxWidth: "100%" };
-    if (showOriginal && imageMeta) {
-      originalWidthStyle = { width: "100%" };
-    }
-  } else if (showOriginal && imageMeta && targetW && targetH) {
+  // Calculate relative sizes normally first to preserve original image scale on the left
+  if (showOriginal && imageMeta && targetW && targetH) {
     const origDominant = Math.max(imageMeta.width, imageMeta.height);
     const destDominant = Math.max(targetW, targetH);
     const absoluteMax = Math.max(origDominant, destDominant);
@@ -252,6 +247,11 @@ export default function CanvasPreview({
       originalWidthStyle = { width: `${origDominant}px` };
       resizedWidthStyle = { width: `${destDominant}px` };
     }
+  }
+
+  // Override only the resized box width for Android & iOS to show exact pixel sizes
+  if (selectedCategory === "Android" || selectedCategory === "iOS") {
+    resizedWidthStyle = { width: `${targetW}px`, maxWidth: "100%" };
   }
 
   return (
