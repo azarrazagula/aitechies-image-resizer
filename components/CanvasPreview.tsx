@@ -196,9 +196,9 @@ export default function CanvasPreview({
   };
   const resizedWrapperStyle: React.CSSProperties = {
     ...checkerStyle,
-    aspectRatio: `${targetW} / ${targetH}`,
     touchAction: mode === "fill" ? "none" : "auto",
   };
+  // Separate container style without aspectRatio — defined after resizedWidthStyle below
   const resizedCanvasStyle: React.CSSProperties = {
     backgroundColor: bgColor === "transparent" ? "transparent" : bgColor,
   };
@@ -246,6 +246,17 @@ export default function CanvasPreview({
       resizedWidthStyle = { width: `${destDominant}px` };
     }
   }
+
+  // Desktop canvas container — flex centered, no aspectRatio, canvas controls its own size
+  const desktopContainerStyle: React.CSSProperties = {
+    ...checkerStyle,
+    touchAction: mode === "fill" ? "none" : "auto",
+    ...resizedWidthStyle,
+    display: "flex",
+    alignItems: "center",
+    justifyContent: "center",
+    minHeight: "120px",
+  };
 
   return (
     <div className="flex flex-col items-center gap-3 w-full">
@@ -359,7 +370,7 @@ export default function CanvasPreview({
               </span>
             </div>
 
-            {/* Resized canvas */}
+            {/* Resized canvas — container uses flex centering, canvas controls its own size */}
             <motion.div
               layout
               className={`relative border rounded-2xl overflow-hidden shadow-lg transition-colors duration-300 mx-auto ${
@@ -367,10 +378,7 @@ export default function CanvasPreview({
                   ? "border-[#8B5CF6]/60 ring-2 ring-[#8B5CF6]/20"
                   : "border-[#8B5CF6]/20"
               }`}
-              style={{
-                ...resizedWrapperStyle,
-                ...resizedWidthStyle
-              }}
+              style={desktopContainerStyle}
               onMouseEnter={() => setIsHovered(true)}
               onMouseLeave={() => { setIsHovered(false); handleEnd(); }}
             >
@@ -391,10 +399,16 @@ export default function CanvasPreview({
                 onTouchStart={(e) => { if (e.touches[0]) handleStart(e.touches[0].clientX, e.touches[0].clientY); }}
                 onTouchMove={(e) => { if (e.touches[0]) handleMove(e.touches[0].clientX, e.touches[0].clientY); }}
                 onTouchEnd={handleEnd}
-                className={`w-full h-auto block select-none transition-opacity duration-300 ${
+                className={`block select-none transition-opacity duration-300 ${
                   isTransitioning ? "opacity-75 blur-[1.5px]" : "opacity-100"
                 } ${mode === "fill" ? (activeDrag ? "cursor-grabbing" : "cursor-grab") : "cursor-default"}`}
-                style={{ aspectRatio: `${targetW}/${targetH}`, ...resizedCanvasStyle }}
+                style={{
+                  maxWidth: "100%",
+                  maxHeight: "65vh",
+                  width: "auto",
+                  height: "auto",
+                  ...resizedCanvasStyle
+                }}
               />
             </motion.div>
           </motion.div>
@@ -407,12 +421,16 @@ export default function CanvasPreview({
       <motion.div
         layout
         transition={{ type: "spring", stiffness: 180, damping: 24 }}
-        className={`lg:hidden relative flex items-center justify-center border bg-[#121212] rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl mx-auto w-full ${
+        className={`lg:hidden relative flex items-center justify-center border rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl mx-auto w-full ${
           isTransitioning
             ? "border-[#8B5CF6]/60 shadow-[#8B5CF6]/20 ring-4 ring-[#8B5CF6]/20 scale-[0.98]"
             : "border-neutral-800/80 shadow-black/40"
         }`}
-        style={{ aspectRatio: `${targetW} / ${targetH}`, maxHeight: "300px" }}
+        style={{
+          ...checkerStyle,
+          touchAction: mode === "fill" ? "none" : "auto",
+          minHeight: "100px",
+        }}
         onMouseEnter={() => setIsHovered(true)}
         onMouseLeave={() => { setIsHovered(false); handleEnd(); }}
       >
@@ -432,10 +450,16 @@ export default function CanvasPreview({
           onTouchStart={(e) => { if (e.touches[0]) handleStart(e.touches[0].clientX, e.touches[0].clientY); }}
           onTouchMove={(e) => { if (e.touches[0]) handleMove(e.touches[0].clientX, e.touches[0].clientY); }}
           onTouchEnd={handleEnd}
-          className={`w-full h-full select-none transition-all duration-300 ${
+          className={`block select-none transition-all duration-300 ${
             isTransitioning ? "opacity-75 blur-[2px] scale-[0.98]" : "opacity-100 blur-0 scale-100"
           } ${mode === "fill" ? (activeDrag ? "cursor-grabbing" : "cursor-grab") : "cursor-default"}`}
-          style={{ objectFit: "contain", ...resizedCanvasStyle }}
+          style={{
+            maxWidth: "100%",
+            maxHeight: "280px",
+            width: "auto",
+            height: "auto",
+            ...resizedCanvasStyle
+          }}
         />
       </motion.div>
 
