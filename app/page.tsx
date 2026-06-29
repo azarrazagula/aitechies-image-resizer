@@ -442,7 +442,7 @@ export default function Home(): JSX.Element {
     <div
       className={`${
         files.length === 0
-          ? "h-[100dvh] overflow-hidden"
+          ? "h-[100dvh] overflow-y-auto overflow-x-hidden"
           : "min-h-[100dvh] overflow-x-hidden"
       } flex flex-col relative bg-[#0D0D0D]`}>
       {/* Background glow effects */}
