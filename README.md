@@ -27,22 +27,18 @@ We used modern and powerful tools to make this app fast and beautiful:
 
 ## 🚀 Step-by-Step: What we did in this project (Our Journey)
 
-### 1️⃣ MCP Setup & Troubleshooting
-- Connected the **21st.dev Magic MCP** server inside our editor config (`mcp_config.json`).
-- Fixed naming errors by renaming the server key from `@21st-dev/magic` to `magic`. Now, all AI components and tools connect perfectly!
-
-### 2️⃣ Dashboard & Core Logic
+### 1️⃣ Dashboard & Core Logic
 - Created a beautiful dark-themed dashboard.
 - Added support for multiple files (Batch Processing).
 - Created a **Canvas Live Preview** so you can see exactly how the cropped image looks.
 - Built presets for different platforms: **Instagram**, **LinkedIn**, **Facebook**, **YouTube**, etc.
 
-### 3️⃣ Adding Magic Animations (Framer Motion)
+### 2️⃣ Adding Magic Animations (Framer Motion)
 - Upgraded the **Image Uploader** to feel alive.
 - When you drag an image over the uploader, it scales up smoothly, and a gorgeous purple glow appears.
 - The cloud icon floats up and down, inviting you to drop your file.
 
-### 4️⃣ Mobile Responsiveness (Very Important!)
+### 3️⃣ Mobile Responsiveness (Very Important!)
 - Made sure everything looks perfect on mobile phones.
 - Text sizes, padding, and layout collapse beautifully so you can resize images on the go from your phone.
 
