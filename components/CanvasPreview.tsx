@@ -407,7 +407,7 @@ export default function CanvasPreview({
       <motion.div
         layout
         transition={{ type: "spring", stiffness: 180, damping: 24 }}
-        className={`lg:hidden relative flex items-center justify-center border rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl mx-auto w-full max-h-[300px] sm:max-h-[380px] ${
+        className={`lg:hidden relative flex items-center justify-center border rounded-2xl sm:rounded-3xl overflow-hidden shadow-2xl mx-auto max-w-full max-h-[300px] sm:max-h-[380px] ${
           isTransitioning
             ? "border-[#8B5CF6]/60 shadow-[#8B5CF6]/20 ring-4 ring-[#8B5CF6]/20 scale-[0.98]"
             : "border-neutral-800/80 shadow-black/40"
