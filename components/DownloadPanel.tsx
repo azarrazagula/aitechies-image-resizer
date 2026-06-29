@@ -62,6 +62,20 @@ export default function DownloadPanel({
           })}
         </div>
 
+        {/* Format Description Info */}
+        <div className="mt-2.5 mb-4 p-3 bg-[#0D0D0D] border border-neutral-800/80 rounded-xl animate-fade-in">
+          <div className="flex gap-2 items-start">
+            <span className="text-[9px] sm:text-[10px] font-bold uppercase px-1.5 py-0.5 rounded bg-neutral-800 text-neutral-300 border border-neutral-700/60 font-mono select-none">
+              {format === "image/png" ? "PNG" : format === "image/jpeg" ? "JPG" : "WebP"}
+            </span>
+            <p className="text-[10px] sm:text-[11px] text-neutral-400 leading-relaxed pt-0.5">
+              {format === "image/png" && "Best for graphics & logos. Lossless format that preserves original details and supports transparent backgrounds."}
+              {format === "image/jpeg" && "Best for photos and social media. Highly compatible and compressed to keep files lightweight."}
+              {format === "image/webp" && "Modern web format. Up to 30% smaller file size than JPG while maintaining gorgeous visual details."}
+            </p>
+          </div>
+        </div>
+
         {/* Quality slider (60% to 100%) */}
         {showQualitySlider && (
           <div className="space-y-2 p-3 bg-[#0D0D0D] border border-neutral-800/80 rounded-xl animate-fade-in">
