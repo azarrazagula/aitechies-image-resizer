@@ -39,3 +39,5 @@ yarn-error.log*
 tsconfig.tsbuildinfo
 .npm-cache/
 
+# AI Agents
+.agents/
