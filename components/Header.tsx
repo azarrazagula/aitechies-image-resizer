@@ -6,23 +6,6 @@ export default function Header(): JSX.Element {
       <div className="max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 h-16 flex items-center justify-between gap-2">
         {/* Brand Logo */}
         <div className="flex items-center gap-1.5 sm:gap-2 flex-shrink-0">
-          {/* SVG Scissors/Crop Logo */}
-          <div className="w-6 h-6 sm:w-8 sm:h-8 rounded-lg bg-primary flex items-center justify-center text-white font-bold text-sm sm:text-lg shadow-md shadow-primary/20">
-            <svg
-              className="w-4 h-4 sm:w-5 sm:h-5 text-white"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
-            >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth={2}
-                d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4"
-              />
-            </svg>
-          </div>
           <span className="text-xs sm:text-xl font-bold tracking-tight text-white">
             AI <span className="text-primary-light">Techies</span>
           </span>
