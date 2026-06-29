@@ -523,23 +523,21 @@ export default function Home(): JSX.Element {
                   <h3 className="hidden md:block text-sm font-semibold uppercase tracking-wider text-neutral-400 text-center">
                     Live Preview
                   </h3>
-                  <div className="max-h-[220px] min-[375px]:max-h-[260px] min-[410px]:max-h-[300px] sm:max-h-[360px] md:max-h-[420px]">
-                    <CanvasPreview
-                      file={activeFile}
-                      targetW={selectedPreset.w}
-                      targetH={selectedPreset.h}
-                      mode={mode}
-                      bgColor={bgColor}
-                      cropOffset={activeCropOffset}
-                      onCropOffsetChange={handleCropOffsetChange}
-                      selectedCategory={selectedCategory}
-                      onPresetSelect={handlePresetSelect}
-                      onCustomDimensionChange={handleInlineDimensionChange}
-                      resizedSize={resizedSize}
-                      format={format}
-                      isCalculatingSize={isCalculatingSize}
-                    />
-                  </div>
+                  <CanvasPreview
+                    file={activeFile}
+                    targetW={selectedPreset.w}
+                    targetH={selectedPreset.h}
+                    mode={mode}
+                    bgColor={bgColor}
+                    cropOffset={activeCropOffset}
+                    onCropOffsetChange={handleCropOffsetChange}
+                    selectedCategory={selectedCategory}
+                    onPresetSelect={handlePresetSelect}
+                    onCustomDimensionChange={handleInlineDimensionChange}
+                    resizedSize={resizedSize}
+                    format={format}
+                    isCalculatingSize={isCalculatingSize}
+                  />
                 </div>
               )}
 
