@@ -440,7 +440,11 @@ export default function Home(): JSX.Element {
 
   return (
     <div
-      className={`min-h-[100dvh] overflow-x-hidden flex flex-col relative bg-[#0D0D0D]`}>
+      className={`${
+        files.length === 0
+          ? "h-[100dvh] overflow-hidden"
+          : "min-h-[100dvh] overflow-x-hidden"
+      } flex flex-col relative bg-[#0D0D0D]`}>
       {/* Background glow effects */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px] pointer-events-none z-0" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-accent/10 blur-[120px] pointer-events-none z-0" />
@@ -453,11 +457,13 @@ export default function Home(): JSX.Element {
         className={`w-full flex-1 flex flex-col relative z-10 ${
           files.length > 0
             ? "max-w-[1400px] xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 lg:py-12"
-            : "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8 py-6"
+            : "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8"
         }`}>
         {files.length === 0 ? (
           /* Landing page when no files uploaded */
-          <div className="flex-1 flex flex-col justify-center py-6 lg:py-8">
+          /* flex-1 + flex items-center = content is vertically centered
+             between Header and Footer, no gap, no scroll */
+          <div className="flex-1 flex items-center py-4">
             <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center w-full">
               <div className="lg:col-span-7 space-y-6 text-left flex flex-col items-start animate-fade-up">
                 {/* Badge */}
