@@ -457,8 +457,8 @@ export default function Home(): JSX.Element {
         }`}>
         {files.length === 0 ? (
           /* Landing page when no files uploaded */
-          <div className="flex-1 flex flex-col">
-            <div className="flex-1 grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center w-full py-4 lg:py-0">
+          <div className="flex-1 flex flex-col justify-center py-6 lg:py-8">
+            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center w-full">
               <div className="lg:col-span-7 space-y-6 text-left flex flex-col items-start animate-fade-up">
                 {/* Badge */}
                 <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary-light text-xs md:text-sm font-medium">
@@ -484,11 +484,6 @@ export default function Home(): JSX.Element {
               <div className="lg:col-span-5 w-full animate-fade-up">
                 <ImageUploader onFilesSelect={handleFilesSelect} />
               </div>
-            </div>
-
-            {/* Mobile Footer — only on landing page, hidden on md+ (md+ uses the outer footer) */}
-            <div className="block md:hidden mt-8 border-t border-neutral-800/60">
-              <Footer />
             </div>
           </div>
         ) : (
@@ -643,10 +638,16 @@ export default function Home(): JSX.Element {
         )}
       </main>
 
-      {/* Footer — tablet+ always, at page bottom */}
-      <div className="hidden md:block">
+      {/* Footer:
+          - Landing page: always visible, sits right below content (no gap)
+          - Editor view: desktop only (mobile has footer inside scroll container) */}
+      {files.length === 0 ? (
         <Footer />
-      </div>
+      ) : (
+        <div className="hidden md:block">
+          <Footer />
+        </div>
+      )}
     </div>
   );
 }
