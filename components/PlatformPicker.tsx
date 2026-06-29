@@ -186,20 +186,29 @@ export default function PlatformPicker({
                   whileHover={{ scale: 1.02 }}
                   whileTap={{ scale: 0.98 }}
                   onClick={() => onPresetSelect(preset, activePlatform.category)}
-                  className={`relative flex flex-col justify-between min-h-[76px] p-3 sm:p-3.5 rounded-xl border text-left transition-all duration-200 ${
+                  className={`relative flex flex-col justify-between min-h-[96px] p-3 sm:p-3.5 rounded-xl border text-left transition-all duration-200 ${
                     isSelected
                       ? "border-primary bg-primary/10 shadow-lg shadow-primary/10"
                       : "border-neutral-800 bg-[#161616]/50 hover:border-neutral-700 hover:bg-[#1a1a1a]"
                   }`}
                 >
-                  {/* Preset Name */}
-                  <span
-                    className={`text-[11px] sm:text-xs md:text-sm font-semibold leading-tight line-clamp-2 ${
-                      isSelected ? "text-white" : "text-neutral-300"
-                    }`}
-                  >
-                    {preset.name}
-                  </span>
+                  <div className="flex flex-col gap-0.5 w-full">
+                    {/* Preset Name */}
+                    <span
+                      className={`text-[11px] sm:text-xs md:text-sm font-semibold leading-tight line-clamp-1 ${
+                        isSelected ? "text-white" : "text-neutral-300"
+                      }`}
+                    >
+                      {preset.name}
+                    </span>
+
+                    {/* Preset Description */}
+                    {preset.description && (
+                      <span className="text-[9px] sm:text-[10px] text-neutral-500 line-clamp-2 leading-snug">
+                        {preset.description}
+                      </span>
+                    )}
+                  </div>
 
                   {/* Resolution Badge — always pinned to bottom-right */}
                   <div className="flex items-end justify-end mt-auto pt-2">
