@@ -1,6 +1,7 @@
 "use client";
 
 import React, { useRef, useState } from "react";
+import { motion } from "framer-motion";
 
 interface ImageUploaderProps {
   onFilesSelect: (files: File[]) => void;
@@ -76,16 +77,22 @@ export default function ImageUploader({
 
   return (
     <div className="w-full">
-      <div
+      <motion.div
         onDragEnter={handleDragEnter}
         onDragLeave={handleDragLeave}
         onDragOver={handleDragOver}
         onDrop={handleDrop}
         onClick={handleClick}
-        className={`relative w-full px-6 py-12 md:py-16 rounded-3xl border-2 border-dashed transition-all duration-300 cursor-pointer backdrop-blur-md ${
-          isDragging
-            ? "border-primary bg-primary/10"
-            : "border-neutral-800 bg-[#161616]/40 hover:border-primary/50 hover:bg-[#161616]/60"
+        initial={false}
+        animate={{
+          scale: isDragging ? 1.02 : 1,
+          borderColor: isDragging ? "#6C47FF" : "#262626",
+          backgroundColor: isDragging ? "rgba(108, 71, 255, 0.1)" : "rgba(22, 22, 22, 0.4)",
+        }}
+        whileHover={!disabled ? { scale: 1.01, borderColor: "rgba(108, 71, 255, 0.5)", backgroundColor: "rgba(22, 22, 22, 0.6)" } : {}}
+        transition={{ type: "spring", stiffness: 300, damping: 20 }}
+        className={`relative w-full px-4 py-8 sm:px-6 sm:py-12 md:py-16 rounded-3xl border-2 border-dashed cursor-pointer backdrop-blur-md transition-shadow duration-300 ${
+          isDragging ? "shadow-[0_0_20px_rgba(108,71,255,0.2)]" : ""
         } ${disabled ? "opacity-60 cursor-not-allowed" : ""}`}
       >
         <input
@@ -99,40 +106,64 @@ export default function ImageUploader({
         />
 
         <div className="flex flex-col items-center justify-center gap-4 text-center">
-          {/* Cloud Upload Icon */}
-          <div className="p-4 rounded-2xl bg-primary/5 text-primary border border-primary/10 shadow-inner transition-transform duration-300">
-            <svg
-              className="w-10 h-10"
-              fill="none"
-              stroke="currentColor"
-              viewBox="0 0 24 24"
-              xmlns="http://www.w3.org/2000/svg"
+          {/* Cloud Upload Icon with motion container and glowing circle */}
+          <div className="relative">
+            {/* Glowing background circle */}
+            <motion.div
+              animate={{
+                opacity: isDragging ? [0.4, 0.8, 0.4] : [0.1, 0.2, 0.1],
+                scale: isDragging ? [1, 1.2, 1] : 1,
+              }}
+              transition={{
+                duration: 2,
+                repeat: Infinity,
+                ease: "easeInOut",
+              }}
+              className="absolute inset-0 bg-primary rounded-2xl blur-md"
+            />
+            <motion.div
+              animate={isDragging ? { y: [-4, 4, -4] } : { y: 0 }}
+              transition={{
+                duration: 1.5,
+                repeat: isDragging ? Infinity : 0,
+                ease: "easeInOut",
+              }}
+              className="relative p-4 rounded-2xl bg-[#161616] text-primary border border-primary/20 shadow-inner"
             >
-              <path
-                strokeLinecap="round"
-                strokeLinejoin="round"
-                strokeWidth="1.5"
-                d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
-              />
-            </svg>
+              <svg
+                className="w-8 h-8 sm:w-10 sm:h-10"
+                fill="none"
+                stroke="currentColor"
+                viewBox="0 0 24 24"
+                xmlns="http://www.w3.org/2000/svg"
+              >
+                <path
+                  strokeLinecap="round"
+                  strokeLinejoin="round"
+                  strokeWidth="1.5"
+                  d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                />
+              </svg>
+            </motion.div>
           </div>
 
-          <div className="space-y-1.5">
-            <h2 className="text-lg sm:text-xl md:text-2xl font-semibold text-white">
-              Drag and drop your image(s)
+          <div className="space-y-1.5 px-2">
+            <h2 className="text-base sm:text-lg md:text-xl font-semibold text-white tracking-tight">
+              {isDragging ? "Drop your images here!" : "Drag and drop your image(s)"}
             </h2>
-            <p className="text-neutral-400 text-sm sm:text-base">
+            <p className="text-neutral-400 text-xs sm:text-sm max-w-xs mx-auto">
               or click to browse from device (Multiple allowed)
             </p>
           </div>
 
           <div className="flex items-center justify-center mt-2">
-            <button 
+            <motion.button
               type="button"
-              className="inline-flex items-center gap-2 px-5 py-2.5 bg-primary hover:bg-primary-dark active:scale-95 text-white font-semibold text-sm sm:text-base rounded-xl transition-all shadow-md shadow-primary/10 border border-primary/20"
+              whileTap={!disabled ? { scale: 0.95 } : {}}
+              className="inline-flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 bg-primary hover:bg-primary-dark text-white font-semibold text-xs sm:text-sm rounded-xl transition-all shadow-md shadow-primary/10 border border-primary/20"
             >
               <svg
-                className="w-4 h-4 sm:w-5 sm:h-5"
+                className="w-4 h-4"
                 fill="none"
                 stroke="currentColor"
                 viewBox="0 0 24 24"
@@ -146,14 +177,14 @@ export default function ImageUploader({
                 />
               </svg>
               Select Images
-            </button>
+            </motion.button>
           </div>
 
-          <p className="text-xs sm:text-sm text-neutral-550 mt-1">
+          <p className="text-[10px] sm:text-xs text-neutral-500 mt-1">
             Supports PNG, JPG, WEBP
           </p>
         </div>
-      </div>
+      </motion.div>
     </div>
   );
 }
