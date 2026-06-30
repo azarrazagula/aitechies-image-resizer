@@ -139,7 +139,7 @@ export default function PlatformPicker({
         <h3 className="text-sm md:text-base font-semibold uppercase tracking-wider text-neutral-400 mb-3">
           1. Choose Platform
         </h3>
-        <div className="grid grid-cols-4 gap-3 sm:flex sm:flex-wrap sm:gap-3">
+        <div className="flex flex-wrap gap-2.5 sm:gap-3">
           {PLATFORMS.map((platform) => {
             const isSelected = selectedCategory === platform.category;
             const colors = BRAND_COLORS[platform.category] || {
