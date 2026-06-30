@@ -26,12 +26,12 @@ export default function ResizeModeSelector({
   onBgColorChange,
 }: ResizeModeSelectorProps): JSX.Element {
   return (
-    <div className="space-y-4">
+    <div className="space-y-6">
       <div>
         <h3 className="text-sm md:text-base font-semibold uppercase tracking-wider text-neutral-400 mb-3">
           3. Resize Mode
         </h3>
-        <div className="grid grid-cols-3 gap-3">
+        <div className="grid grid-cols-3 gap-4">
           {(["fit", "fill", "stretch"] as const).map((m) => {
             const isSelected = mode === m;
             let description = "";

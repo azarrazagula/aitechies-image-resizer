@@ -28,6 +28,7 @@ export default function Home(): JSX.Element {
     Record<number, { x: number; y: number }>
   >({});
   const [isProcessing, setIsProcessing] = useState<boolean>(false);
+  const [isPreviewDragging, setIsPreviewDragging] = useState<boolean>(false);
 
   const [format, setFormat] = useState<
     "image/png" | "image/jpeg" | "image/webp"
@@ -438,13 +439,50 @@ export default function Home(): JSX.Element {
     setCropOffsets({});
   };
 
+  // ── Drag & Drop replacement handlers for the active preview ──
+  const handlePreviewDragEnter = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsPreviewDragging(true);
+  };
+
+  const handlePreviewDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsPreviewDragging(false);
+  };
+
+  const handlePreviewDragOver = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+  };
+
+  const handlePreviewDrop = (e: React.DragEvent<HTMLDivElement>) => {
+    e.preventDefault();
+    e.stopPropagation();
+    setIsPreviewDragging(false);
+
+    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
+      const validFiles: File[] = [];
+      for (let i = 0; i < e.dataTransfer.files.length; i++) {
+        const file = e.dataTransfer.files[i];
+        if (
+          file.type === "image/png" ||
+          file.type === "image/jpeg" ||
+          file.type === "image/webp" ||
+          file.type === "image/jpg"
+        ) {
+          validFiles.push(file);
+        }
+      }
+      if (validFiles.length > 0) {
+        handleFilesSelect(validFiles);
+      }
+    }
+  };
+
   return (
-    <div
-      className={`${
-        files.length === 0
-          ? "min-h-[100dvh] overflow-x-hidden lg:h-[100dvh] lg:overflow-hidden"
-          : "min-h-[100dvh] overflow-x-hidden"
-      } flex flex-col relative bg-[#0D0D0D]`}>
+    <div className="min-h-[100dvh] overflow-x-hidden flex flex-col relative bg-[#0D0D0D]">
       {/* Background glow effects */}
       <div className="absolute top-[-10%] left-[-10%] w-[50%] h-[50%] rounded-full bg-primary/10 blur-[120px] pointer-events-none z-0" />
       <div className="absolute bottom-[-10%] right-[-10%] w-[50%] h-[50%] rounded-full bg-accent/10 blur-[120px] pointer-events-none z-0" />
@@ -453,76 +491,129 @@ export default function Home(): JSX.Element {
       <Header />
 
       {/* Main Container */}
-      <main
-        className={`w-full flex-1 flex flex-col relative z-10 ${
-          files.length > 0
-            ? "max-w-[1400px] xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 lg:py-12"
-            : "max-w-6xl mx-auto px-4 sm:px-6 lg:px-8"
-        }`}>
-        {files.length === 0 ? (
-          /* Landing page when no files uploaded */
-          /* flex-1 + flex items-center = content is vertically centered
-             between Header and Footer, no gap, no scroll */
-          <div className="flex-1 flex items-center py-4">
-            <div className="grid grid-cols-1 lg:grid-cols-12 gap-8 lg:gap-16 items-center w-full">
-              <div className="lg:col-span-7 space-y-6 text-left flex flex-col items-start animate-fade-up">
-                {/* Badge */}
-                <div className="inline-flex items-center gap-2 px-3.5 py-1.5 rounded-full bg-primary/10 border border-primary/20 text-primary-light text-xs md:text-sm font-medium">
-                  <span className="w-1.5 h-1.5 rounded-full bg-primary-light animate-pulse" />
-                  Social Media Image Resizer
-                </div>
+      <main className="w-full flex-1 flex flex-col relative z-10 max-w-[1400px] xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-6 md:py-10 lg:py-20">
+        {/* Unified Title/Branding Section - Always at the top */}
+        <div className="space-y-3 sm:space-y-4 lg:space-y-6 mb-8 md:mb-12 lg:mb-20 text-center">
+          {/* Title */}
+          <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight tracking-tight">
+            SOCIAL MEDIA{" "}
+            <span className="text-brand-gradient">IMAGE RESIZER</span>
+          </h1>
 
-                {/* Title */}
-                <h1 className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-extrabold text-white leading-tight tracking-tight">
-                  SOCIAL MEDIA <br />
-                  <span className="text-brand-gradient">IMAGE RESIZER</span>
-                </h1>
+          {/* Subtext */}
+          <p className="text-neutral-400 text-xs sm:text-sm md:text-base max-w-2xl mx-auto leading-relaxed">
+            Resize your photos instantly for Instagram, LinkedIn, YouTube,
+            Facebook, Twitter, WhatsApp, Android & iOS. 100% client-side,
+            secure, and private.
+          </p>
+        </div>
 
-                {/* Subtext */}
-                <p className="text-neutral-400 text-base md:text-lg max-w-xl leading-relaxed">
-                  Resize your photos instantly for Instagram, LinkedIn,
-                  Facebook, YouTube, Twitter, WhatsApp, Android & iOS. 100%
-                  client-side, secure, and private.
-                </p>
-              </div>
+        {/* 2-Column Responsive Grid */}
+        <div className="flex flex-col lg:grid lg:grid-cols-12 gap-8 lg:gap-12 xl:gap-16 items-start w-full">
+          {/* Column 1: Controls (Left Column on desktop, stacks below preview on mobile) */}
+          <div className="order-2 lg:order-1 col-span-12 lg:col-span-5 xl:col-span-5 w-full space-y-10">
+            {/* Platform Picker */}
+            <PlatformPicker
+              onPresetSelect={handlePresetSelect}
+              selectedPreset={selectedPreset}
+              selectedCategory={selectedCategory}
+            />
 
-              {/* Drag & drop upload zone */}
-              <div className="lg:col-span-5 w-full animate-fade-up">
+            {/* Resize Mode Selector */}
+            <ResizeModeSelector
+              mode={mode}
+              onModeSelect={handleModeSelect}
+              bgColor={bgColor}
+              onBgColorChange={handleBgColorSelect}
+            />
+
+            {/* Download Panel */}
+            <DownloadPanel
+              onDownload={handleDownload}
+              isBatch={files.length > 1}
+              isLoading={isProcessing}
+              format={format}
+              onFormatChange={setFormat}
+              quality={quality}
+              onQualityChange={setQuality}
+              disabled={files.length === 0}
+            />
+          </div>
+
+          {/* Column 2: Upload Zone / Canvas Preview (Right Column on desktop, stacks at top on mobile) */}
+          <div
+            className={`order-1 lg:order-2 col-span-12 lg:col-span-7 xl:col-span-7 w-full ${files.length > 0 ? "sticky top-[64px] lg:top-24 z-20" : ""}`}>
+            {files.length === 0 ? (
+              /* Drag & drop upload zone */
+              <div className="w-full">
                 <ImageUploader onFilesSelect={handleFilesSelect} />
               </div>
-            </div>
-          </div>
-        ) : (
-          /* Editor Dashboard */
-          <motion.div
-            initial={{ opacity: 0, y: 15 }}
-            animate={{ opacity: 1, y: 0 }}
-            transition={{ duration: 0.5, ease: "easeOut" }}
-            className="flex flex-col md:grid md:grid-cols-12 gap-0 md:gap-8 lg:gap-12 items-stretch md:items-start w-full py-0 md:py-4">
-            {/* Top Preview Column (Right Column on desktop) */}
-            <div className="sticky top-16 md:top-24 order-1 md:order-2 md:col-span-6 xl:col-span-7 flex flex-col bg-[#0D0D0D] md:bg-transparent border-b md:border-none border-neutral-900 p-4 md:p-0 flex-shrink-0 z-20 md:z-10 shadow-md md:shadow-none">
-              {/* Mobile/Tablet Upload New Button (Above Preview) */}
-              <div className="flex items-center justify-between mb-3 md:hidden px-1">
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all text-xs font-semibold border border-neutral-800">
-                  <span>←</span>
-                  <span>Upload New Images</span>
-                </button>
-                {files.length > 1 && (
-                  <span className="text-xs font-medium text-neutral-400 bg-neutral-900 border border-neutral-800 px-3 py-1 rounded-xl">
-                    Batch: {files.length} loaded
-                  </span>
-                )}
-              </div>
+            ) : (
+              /* Live Preview Card */
+              <motion.div
+                initial={{ opacity: 0, y: 15 }}
+                animate={{ opacity: 1, y: 0 }}
+                transition={{ duration: 0.4, ease: "easeOut" }}
+                onDragEnter={handlePreviewDragEnter}
+                onDragOver={handlePreviewDragOver}
+                onDragLeave={handlePreviewDragLeave}
+                onDrop={handlePreviewDrop}
+                className="glass-card p-4 sm:p-5 lg:p-6 border-neutral-800 space-y-8 relative overflow-hidden shadow-2xl">
+                {/* Drag-to-Replace Overlay */}
+                <AnimatePresence>
+                  {isPreviewDragging && (
+                    <motion.div
+                      initial={{ opacity: 0 }}
+                      animate={{ opacity: 1 }}
+                      exit={{ opacity: 0 }}
+                      className="absolute inset-0 bg-[#0D0D0D]/90 z-30 flex flex-col items-center justify-center border-2 border-dashed border-primary rounded-3xl m-2 sm:m-3 gap-3">
+                      <div className="p-4 rounded-full bg-primary/10 border border-primary/20 text-primary">
+                        <svg
+                          className="w-8 h-8 animate-bounce"
+                          fill="none"
+                          stroke="currentColor"
+                          viewBox="0 0 24 24">
+                          <path
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                            strokeWidth="2"
+                            d="M7 16a4 4 0 01-.88-7.903A5 5 0 1115.9 6L16 6a5 5 0 011 9.9M15 13l-3-3m0 0l-3 3m3-3v12"
+                          />
+                        </svg>
+                      </div>
+                      <p className="text-white font-bold text-base">
+                        Drop to replace image(s)
+                      </p>
+                    </motion.div>
+                  )}
+                </AnimatePresence>
 
-              {/* Canvas Live Preview */}
-              {activeFile && selectedPreset && (
-                <div className="md:glass-card md:p-5 lg:p-6 md:border-neutral-800 space-y-3 md:space-y-4">
-                  <h3 className="hidden md:block text-sm font-semibold uppercase tracking-wider text-neutral-400 text-center">
-                    Live Preview
-                  </h3>
+                {/* Preview Card Header */}
+                <div className="flex items-center justify-between pb-3 border-b border-neutral-900">
+                  <div className="flex items-center gap-2">
+                    <span className="w-2 h-2 rounded-full bg-[#8B5CF6] animate-pulse" />
+                    <h3 className="text-xs sm:text-sm font-semibold uppercase tracking-wider text-neutral-450">
+                      Live Preview
+                    </h3>
+                  </div>
+
+                  <div className="flex items-center gap-3">
+                    {files.length > 1 && (
+                      <span className="text-[10px] sm:text-xs font-medium text-neutral-400 bg-neutral-900 border border-neutral-800 px-2.5 py-1 rounded-xl">
+                        Batch: {files.length} images
+                      </span>
+                    )}
+                    <button
+                      type="button"
+                      onClick={handleReset}
+                      className="inline-flex items-center gap-1.5 px-3 py-1.5 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-400 hover:text-white transition-all text-xs font-semibold border border-neutral-800 hover:border-neutral-750">
+                      <span>Clear Image(s)</span>
+                    </button>
+                  </div>
+                </div>
+
+                {/* Canvas Live Preview Component */}
+                {activeFile && selectedPreset && (
                   <CanvasPreview
                     file={activeFile}
                     targetW={selectedPreset.w}
@@ -538,120 +629,62 @@ export default function Home(): JSX.Element {
                     format={format}
                     isCalculatingSize={isCalculatingSize}
                   />
-                </div>
-              )}
-
-              {/* Batch image thumbnails navigation */}
-              {files.length > 1 && (
-                <div className="md:glass-card md:p-4 md:border-neutral-800 p-2 border-t md:border-t-0 border-neutral-900 mt-2">
-                  <span className="hidden lg:block text-xs font-semibold text-neutral-400 uppercase tracking-wider mb-2">
-                    Select Preview Image
-                  </span>
-                  <div className="flex gap-2.5 overflow-x-auto pb-1.5 scrollbar-thin">
-                    {files.map((file, idx) => {
-                      const isActive = idx === activeFileIndex;
-                      const thumbUrl = URL.createObjectURL(file);
-
-                      return (
-                        <motion.button
-                          key={file.name + idx}
-                          type="button"
-                          onClick={() => handleThumbnailClick(idx)}
-                          whileHover={{ scale: 1.05 }}
-                          whileTap={{ scale: 0.95 }}
-                          className={`w-12 h-12 lg:w-14 lg:h-14 rounded-xl border flex-shrink-0 overflow-hidden relative transition-all duration-300 ${
-                            isActive
-                              ? "border-primary ring-2 ring-primary/40 scale-105"
-                              : "border-neutral-800 hover:border-neutral-600 hover:scale-102"
-                          }`}>
-                          {isActive && (
-                            <motion.div
-                              layoutId="activeThumbRing"
-                              className="absolute inset-0 border-2 border-primary rounded-xl pointer-events-none z-10"
-                              transition={{
-                                type: "spring",
-                                stiffness: 300,
-                                damping: 30,
-                              }}
-                            />
-                          )}
-                          <img
-                            src={thumbUrl}
-                            alt={file.name}
-                            className="w-full h-full object-cover"
-                            onLoad={() => URL.revokeObjectURL(thumbUrl)}
-                          />
-                        </motion.button>
-                      );
-                    })}
-                  </div>
-                </div>
-              )}
-            </div>
-
-            {/* Bottom Controls Column (Left Column on desktop) */}
-            <div className="order-2 md:order-1 md:col-span-6 xl:col-span-5 flex-1 p-4 sm:p-6 md:p-0 space-y-6 bg-[#090909] md:bg-transparent">
-              {/* Reset/Upload New button (Desktop Only) */}
-              <div className="hidden md:flex items-center justify-between">
-                <button
-                  type="button"
-                  onClick={handleReset}
-                  className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-neutral-900 hover:bg-neutral-800 text-neutral-300 hover:text-white transition-all text-xs font-semibold border border-neutral-800">
-                  <span>←</span>
-                  <span>Back</span>
-                </button>
-                {files.length > 1 && (
-                  <span className="text-xs font-medium text-neutral-400 bg-neutral-900 border border-neutral-800 px-3 py-1 rounded-xl">
-                    Batch Mode: {files.length} images loaded
-                  </span>
                 )}
-              </div>
 
-              {/* Platform Picker */}
-              <PlatformPicker
-                onPresetSelect={handlePresetSelect}
-                selectedPreset={selectedPreset}
-                selectedCategory={selectedCategory}
-              />
+                {/* Batch thumbnails list */}
+                {files.length > 1 && (
+                  <div className="p-3 border border-neutral-900 bg-neutral-950/40 rounded-2xl mt-6 space-y-2">
+                    <span className="block text-[10px] font-bold text-neutral-500 uppercase tracking-widest">
+                      Select Preview Image
+                    </span>
+                    <div className="flex gap-2.5 overflow-x-auto pb-1.5 scrollbar-thin">
+                      {files.map((file, idx) => {
+                        const isActive = idx === activeFileIndex;
+                        const thumbUrl = URL.createObjectURL(file);
 
-              {/* Resize Mode Selector */}
-              <ResizeModeSelector
-                mode={mode}
-                onModeSelect={handleModeSelect}
-                bgColor={bgColor}
-                onBgColorChange={handleBgColorSelect}
-              />
-
-              {/* Download Panel */}
-              <DownloadPanel
-                onDownload={handleDownload}
-                isBatch={files.length > 1}
-                isLoading={isProcessing}
-                format={format}
-                onFormatChange={setFormat}
-                quality={quality}
-                onQualityChange={setQuality}
-              />
-
-              {/* Mobile Footer (shown inside scroll container) */}
-              <div className="block md:hidden pt-8 border-t border-neutral-900">
-                <Footer />
-              </div>
-            </div>
-          </motion.div>
-        )}
+                        return (
+                          <motion.button
+                            key={file.name + idx}
+                            type="button"
+                            onClick={() => handleThumbnailClick(idx)}
+                            whileHover={{ scale: 1.05 }}
+                            whileTap={{ scale: 0.95 }}
+                            className={`w-12 h-12 lg:w-14 lg:h-14 rounded-xl border flex-shrink-0 overflow-hidden relative transition-all duration-300 ${
+                              isActive
+                                ? "border-primary ring-2 ring-primary/40 scale-105"
+                                : "border-neutral-800 hover:border-neutral-600 hover:scale-102"
+                            }`}>
+                            {isActive && (
+                              <motion.div
+                                layoutId="activeThumbRing"
+                                className="absolute inset-0 border-2 border-primary rounded-xl pointer-events-none z-10"
+                                transition={{
+                                  type: "spring",
+                                  stiffness: 300,
+                                  damping: 30,
+                                }}
+                              />
+                            )}
+                            <img
+                              src={thumbUrl}
+                              alt={file.name}
+                              className="w-full h-full object-cover"
+                              onLoad={() => URL.revokeObjectURL(thumbUrl)}
+                            />
+                          </motion.button>
+                        );
+                      })}
+                    </div>
+                  </div>
+                )}
+              </motion.div>
+            )}
+          </div>
+        </div>
       </main>
 
-      {/* Footer:
-          - Landing page: always visible, sits right below content (no gap)
-          - Editor view: desktop only (mobile has footer inside scroll container) */}
-      {files.length === 0 ? (
-        <Footer />
-      ) : (
-        <div className="hidden md:block">
-          <Footer />
-        </div>
-      )}
+      {/* Footer */}
+      <Footer />
     </div>
   );
 }

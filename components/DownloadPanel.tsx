@@ -14,6 +14,7 @@ interface DownloadPanelProps {
   onFormatChange: (format: "image/png" | "image/jpeg" | "image/webp") => void;
   quality: number;
   onQualityChange: (quality: number) => void;
+  disabled?: boolean;
 }
 
 export default function DownloadPanel({
@@ -24,6 +25,7 @@ export default function DownloadPanel({
   onFormatChange,
   quality,
   onQualityChange,
+  disabled = false,
 }: DownloadPanelProps): JSX.Element {
   const showQualitySlider = format === "image/jpeg" || format === "image/webp";
 
@@ -104,7 +106,7 @@ export default function DownloadPanel({
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               type="button"
-              disabled={isLoading}
+              disabled={isLoading || disabled}
               onClick={() => onDownload(format, quality / 100, "zip")}
               className="w-full flex items-center justify-center gap-2 px-4 bg-primary hover:bg-primary-dark disabled:bg-neutral-800 disabled:text-neutral-600 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-md shadow-primary/10 border border-primary/20 text-sm sm:text-base md:text-[17px] py-3.5"
             >
@@ -119,7 +121,7 @@ export default function DownloadPanel({
             </button>
             <button
               type="button"
-              disabled={isLoading}
+              disabled={isLoading || disabled}
               onClick={() => onDownload(format, quality / 100, "single")}
               className="w-full flex items-center justify-center gap-2 px-4 bg-neutral-900 hover:bg-neutral-800 disabled:bg-neutral-800 disabled:text-neutral-600 disabled:cursor-not-allowed border border-neutral-800 text-neutral-200 font-bold rounded-xl transition-all text-sm sm:text-base md:text-[17px] py-3.5"
             >
@@ -136,7 +138,7 @@ export default function DownloadPanel({
         ) : (
           <button
             type="button"
-            disabled={isLoading}
+            disabled={isLoading || disabled}
             onClick={() => onDownload(format, quality / 100, "single")}
             className="w-full flex items-center justify-center gap-2 px-4 bg-primary hover:bg-primary-dark disabled:bg-neutral-800 disabled:text-neutral-600 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-md shadow-primary/10 border border-primary/20 text-sm sm:text-base md:text-[17px] py-3.5"
           >

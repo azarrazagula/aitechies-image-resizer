@@ -120,13 +120,13 @@ export default function PlatformPicker({
     PLATFORMS.find((p) => p.category === selectedCategory) || PLATFORMS[0];
 
   return (
-    <div className="space-y-6">
+    <div className="space-y-8">
       {/* Category Selection Grid */}
       <div>
         <h3 className="text-sm md:text-base font-semibold uppercase tracking-wider text-neutral-400 mb-3">
           1. Choose Platform
         </h3>
-        <div className="grid grid-cols-4 gap-2 sm:flex sm:flex-wrap sm:gap-3">
+        <div className="grid grid-cols-4 gap-3 sm:flex sm:flex-wrap sm:gap-3">
           {PLATFORMS.map((platform) => {
             const isSelected = selectedCategory === platform.category;
             const colors = BRAND_COLORS[platform.category] || {
@@ -172,7 +172,7 @@ export default function PlatformPicker({
             animate={{ opacity: 1, y: 0 }}
             exit={{ opacity: 0, y: -8 }}
             transition={{ duration: 0.2 }}
-            className="grid grid-cols-2 sm:grid-cols-3 gap-2"
+            className="grid grid-cols-2 sm:grid-cols-3 gap-3"
           >
             {activePlatform.presets.map((preset) => {
               const isSelected =

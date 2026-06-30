@@ -255,12 +255,12 @@ export default function CanvasPreview({
   }
 
   return (
-    <div className="flex flex-col items-center gap-3 w-full">
+    <div className="flex flex-col items-center gap-6 w-full">
 
       {/* ══════════════════════════════════════════════════════
           DESKTOP ONLY (lg+): Toggleable Original + Resized
           ══════════════════════════════════════════════════════ */}
-      <div className="hidden lg:flex flex-col gap-3 w-full">
+      <div className="hidden lg:flex flex-col gap-5 w-full">
 
         {/* ── Section header with compare toggle ── */}
         <div className="flex items-center justify-between px-1">
@@ -465,7 +465,7 @@ export default function CanvasPreview({
       {/* ══════════════════════════════════════════════════════
           Dimension display pill (instantly editable inline when clicked)
           ══════════════════════════════════════════════════════ */}
-      <div className="flex flex-col items-center w-full mt-0.5 select-none">
+      <div className="flex flex-col items-center w-full mt-2 select-none">
         <motion.div
           layout
           transition={{ type: "spring", stiffness: 300, damping: 25 }}
