@@ -249,8 +249,8 @@ export default function CanvasPreview({
     }
   }
 
-  // Override only the resized box width for Android & iOS to show exact pixel sizes
-  if (selectedCategory === "Android" || selectedCategory === "iOS") {
+  // Override only the resized box width for Android, iOS & Web to show exact pixel sizes
+  if (selectedCategory === "Android" || selectedCategory === "iOS" || selectedCategory === "Web") {
     resizedWidthStyle = { width: `${targetW}px`, maxWidth: "100%" };
   }
 
