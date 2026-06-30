@@ -6,7 +6,7 @@ interface DownloadPanelProps {
   onDownload: (
     format: "image/png" | "image/jpeg" | "image/webp",
     quality: number,
-    downloadType: "zip" | "individual" | "single"
+    downloadType: "zip" | "individual" | "single" | "mobile-zip"
   ) => void;
   isBatch: boolean;
   isLoading: boolean;
@@ -15,6 +15,8 @@ interface DownloadPanelProps {
   quality: number;
   onQualityChange: (quality: number) => void;
   disabled?: boolean;
+  isAllSizesPlatform?: boolean;
+  selectedCategory?: string;
 }
 
 export default function DownloadPanel({
@@ -26,6 +28,8 @@ export default function DownloadPanel({
   quality,
   onQualityChange,
   disabled = false,
+  isAllSizesPlatform = false,
+  selectedCategory = "",
 }: DownloadPanelProps): JSX.Element {
   const showQualitySlider = format === "image/jpeg" || format === "image/webp";
 
@@ -102,7 +106,39 @@ export default function DownloadPanel({
 
       {/* Download trigger buttons */}
       <div className="space-y-3 pt-2">
-        {isBatch ? (
+        {isAllSizesPlatform ? (
+          /* Mobile / Web Platform: Download ALL sizes as ZIP */
+          <div className="space-y-3">
+            {/* Info callout */}
+            <div className="flex items-start gap-2.5 p-3 bg-[#0D0D0D] border border-[#8B5CF6]/30 rounded-xl">
+              <div className="mt-0.5 shrink-0 w-5 h-5 rounded-full bg-[#8B5CF6]/20 border border-[#8B5CF6]/40 flex items-center justify-center">
+                <svg className="w-3 h-3 text-[#8B5CF6]" fill="currentColor" viewBox="0 0 20 20">
+                  <path fillRule="evenodd" d="M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z" clipRule="evenodd" />
+                </svg>
+              </div>
+              <p className="text-[10px] sm:text-[11px] text-neutral-400 leading-relaxed">
+                All <span className="text-[#a78bfa] font-semibold">{selectedCategory}</span> sizes will be exported into one ZIP file automatically.
+              </p>
+            </div>
+
+            {/* Download All Sizes button */}
+            <button
+              type="button"
+              disabled={isLoading || disabled}
+              onClick={() => onDownload(format, quality / 100, "mobile-zip")}
+              className="w-full flex items-center justify-center gap-2.5 px-4 bg-primary hover:bg-primary-dark disabled:bg-neutral-800 disabled:text-neutral-600 disabled:cursor-not-allowed text-white font-bold rounded-xl transition-all shadow-md shadow-primary/20 border border-primary/20 text-sm sm:text-base md:text-[17px] py-3.5"
+            >
+              {isLoading ? (
+                <span className="w-4 h-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+              ) : (
+                <svg className="w-4 h-4 sm:w-5 sm:h-5" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                  <path strokeLinecap="round" strokeLinejoin="round" strokeWidth="2" d="M4 16v1a3 3 0 003 3h10a3 3 0 003-3v-1m-4-4l-4 4m0 0l-4-4m4 4V4" />
+                </svg>
+              )}
+              Download All Sizes (ZIP)
+            </button>
+          </div>
+        ) : isBatch ? (
           <div className="grid grid-cols-1 sm:grid-cols-2 gap-3">
             <button
               type="button"

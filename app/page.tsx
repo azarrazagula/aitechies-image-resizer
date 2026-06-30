@@ -9,7 +9,7 @@ import PlatformPicker from "../components/PlatformPicker";
 import ResizeModeSelector from "../components/ResizeModeSelector";
 import CanvasPreview from "../components/CanvasPreview";
 import DownloadPanel from "../components/DownloadPanel";
-import { Preset } from "../utils/presets";
+import { Preset, PLATFORMS, ALL_SIZES_ZIP_CATEGORIES } from "../utils/presets";
 import { resizeImage } from "../utils/resizeImage";
 import { triggerDownload, triggerBatchZipDownload } from "../utils/download";
 
@@ -268,7 +268,7 @@ export default function Home(): JSX.Element {
   const handleDownload = async (
     format: "image/png" | "image/jpeg" | "image/webp",
     quality: number,
-    downloadType: "zip" | "individual" | "single",
+    downloadType: "zip" | "individual" | "single" | "mobile-zip",
   ) => {
     if (files.length === 0) return;
 
@@ -286,7 +286,7 @@ export default function Home(): JSX.Element {
         );
         return;
       }
-    } else {
+    } else if (downloadType !== "mobile-zip") {
       for (let i = 0; i < files.length; i++) {
         const settings = fileSettings[i];
         if (settings) {
@@ -416,6 +416,35 @@ export default function Home(): JSX.Element {
         }
         const zipFilename = `aitechies_resized_batch.zip`;
         await triggerBatchZipDownload(items, zipFilename);
+      } else if (downloadType === "mobile-zip") {
+        // Mobile platform: resize activeFile to ALL presets for the selected platform
+        if (!activeFile) return;
+        const platformData = PLATFORMS.find(p => p.category === selectedCategory);
+        if (!platformData) return;
+
+        const mobileItems: { blob: Blob; filename: string }[] = [];
+        for (const preset of platformData.presets) {
+          const blob = await resizeImage(
+            activeFile,
+            preset.w,
+            preset.h,
+            mode,
+            bgColor,
+            format,
+            quality,
+            activeCropOffset,
+          );
+          const filename = getCleanFilename(
+            activeFile.name,
+            ext,
+            preset,
+            selectedCategory,
+          );
+          mobileItems.push({ blob, filename });
+        }
+        const platformSlug = selectedCategory.toLowerCase();
+        const mobileZipFilename = `aitechies_${platformSlug}_icons.zip`;
+        await triggerBatchZipDownload(mobileItems, mobileZipFilename);
       }
     } catch (error) {
       console.error("Resize failed:", error);
@@ -493,7 +522,7 @@ export default function Home(): JSX.Element {
       {/* Main Container */}
       <main className="w-full flex-1 flex flex-col relative z-10 max-w-[1400px] xl:max-w-[1600px] mx-auto px-4 sm:px-6 lg:px-12 py-6 md:py-10 lg:py-20">
         {/* Unified Title/Branding Section - Always at the top */}
-        <div className="space-y-3 sm:space-y-4 lg:space-y-6 mb-8 md:mb-12 lg:mb-20 text-center">
+        <div className="space-y-3 sm:space-y-4 lg:space-y-6 mb-8 md:mb-12 lg:mb-16 text-center">
           {/* Title */}
           <h1 className="text-3xl sm:text-4xl md:text-5xl lg:text-6xl font-extrabold text-white leading-tight tracking-tight">
             SOCIAL MEDIA{" "}
@@ -537,6 +566,8 @@ export default function Home(): JSX.Element {
               quality={quality}
               onQualityChange={setQuality}
               disabled={files.length === 0}
+              isAllSizesPlatform={(ALL_SIZES_ZIP_CATEGORIES as readonly string[]).includes(selectedCategory)}
+              selectedCategory={selectedCategory}
             />
           </div>
 

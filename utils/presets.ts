@@ -54,6 +54,20 @@ export const PLATFORMS: PlatformPresets[] = [
       { name: "Display Picture", w: 500, h: 500, description: "Profile display contact photo" },
     ],
   },
+  {
+    category: "Web",
+    presets: [
+      { name: "Favicon (32x32)", w: 32, h: 32, description: "Standard browser tab favicon" },
+      { name: "Favicon (16x16)", w: 16, h: 16, description: "Classic legacy browser tab favicon" },
+      { name: "Apple Touch Icon", w: 180, h: 180, description: "Bookmark icon for iPhone/iPad home screen" },
+      { name: "Web App Icon (192)", w: 192, h: 192, description: "Android Chrome home screen icon" },
+      { name: "Web App Icon (512)", w: 512, h: 512, description: "Web app splash screen launcher icon" },
+      { name: "Open Graph (OG Image)", w: 1200, h: 630, description: "Social share link preview graphic" },
+    ],
+  },
   ...MOBILE_PLATFORMS,
 ];
+
+export const MOBILE_CATEGORY_NAMES = ["Android", "iOS"] as const;
+export const ALL_SIZES_ZIP_CATEGORIES = ["Android", "iOS", "Web"] as const;
 
