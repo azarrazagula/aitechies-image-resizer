@@ -82,23 +82,56 @@ export default function DownloadPanel({
           </div>
         </div>
 
-        {/* Quality slider (60% to 100%) */}
+        {/* Quality slider (10% to 100%) */}
         {showQualitySlider && (
-          <div className="space-y-2 p-3 bg-[#0D0D0D] border border-neutral-800/80 rounded-xl animate-fade-in">
+          <div className="space-y-3 p-3 bg-[#0D0D0D] border border-neutral-900 rounded-xl animate-fade-in">
             <div className="flex justify-between text-xs sm:text-sm">
               <span className="text-neutral-400 font-semibold">Image Quality</span>
               <span className="font-mono font-bold text-accent">{quality}%</span>
             </div>
-            <input
-              type="range"
-              min="60"
-              max="100"
-              value={quality}
-              onChange={(e) => onQualityChange(parseInt(e.target.value))}
-              className="w-full accent-primary bg-neutral-800 rounded-lg cursor-pointer h-1.5"
-            />
+            
+            <div className="relative pt-1 px-1">
+              <input
+                type="range"
+                min="10"
+                max="100"
+                step="10"
+                value={quality}
+                onChange={(e) => onQualityChange(parseInt(e.target.value))}
+                className="w-full accent-primary bg-neutral-800 rounded-lg cursor-pointer h-1.5"
+              />
+              
+              {/* Glowing Snap Points */}
+              <div className="flex justify-between w-full px-0.5 mt-2">
+                {[10, 20, 30, 40, 50, 60, 70, 80, 90, 100].map((pt) => {
+                  const isPassed = quality >= pt;
+                  const isCurrent = quality === pt;
+                  return (
+                    <div key={pt} className="flex flex-col items-center gap-1 select-none">
+                      <div
+                        className={`w-1.5 h-1.5 rounded-full transition-all duration-300 ${
+                          isCurrent
+                            ? "bg-primary ring-2 ring-primary/40 shadow-[0_0_8px_rgba(139,92,246,0.8)] scale-125"
+                            : isPassed
+                            ? "bg-primary-light/80"
+                            : "bg-neutral-800"
+                        }`}
+                      />
+                      <span
+                        className={`text-[9px] font-mono font-semibold transition-colors duration-300 ${
+                          isCurrent ? "text-accent font-bold" : "text-neutral-600"
+                        }`}
+                      >
+                        {pt}
+                      </span>
+                    </div>
+                  );
+                })}
+              </div>
+            </div>
+            
             <span className="text-[10px] sm:text-[11px] text-neutral-500 block leading-tight">
-              Lower quality reduces file size; higher quality retains details.
+              Lower quality reduces file size; snaps to standard quality presets.
             </span>
           </div>
         )}
